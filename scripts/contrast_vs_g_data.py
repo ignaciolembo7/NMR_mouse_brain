@@ -1,31 +1,33 @@
-#NMRSI - Ignacio Lembo Ferrari - 27/11/2023
+#NMRSI - Ignacio Lembo Ferrari - 25/04/2024
 
 import numpy as np
 import matplotlib.pyplot as plt
 from nogse import nogse
-
+from brukerapi.dataset import Dataset as ds
+import cv2
 import seaborn as sns
 sns.set(context='paper')
 sns.set_style("whitegrid")
 
 
 T_NOGSE = input('T_NOGSE [ms]: ') #ms
-file_name = "mousebrain_20200409" #"levaduras_20220830" #resultados
-roi = "roi_mousebrain_20200409" # "roi_levaduras_20220830"
-roi_set = np.genfromtxt(f"../scripts/ROIS/{roi}.txt")
+file_name = "data_mousebrain_20200409"
 
 #D0_ext = 2.3e-12
 #D0_int = 0.7e-12 # intra
 
-T_nogse, g_contrast, n, f1, f2, f3, f4,f5 =  nogse.upload_data_delta_M(file_name, roi_set)
+rois = np.empty(5)
 
-rois = [f1,f2,f3,f4,f5] 
 idx = 0
 fig, ax = plt.subplots(figsize=(8,6)) #Imagen de todas las ROIS juntas
 
 for i in ["ROI1","ROI2","ROI3","ROI4","ROI5"]: 
 
+    mask = np.loadtxt(f"rois/roi_"+ str(idx+1) +".txt")
+
     fig1, ax1 = plt.subplots(figsize=(8,6)) #Imagen de cada ROI
+    
+    T_nogse, g_contrast, n, rois[i] =  nogse.upload_data_delta_M(file_name, mask)
 
     nogse.plot_contrast_datas(ax, i, g_contrast, rois[idx], T_nogse, n)
     nogse.plot_contrast_data(ax1, i, g_contrast, rois[idx], T_nogse, n)
@@ -41,15 +43,3 @@ for i in ["ROI1","ROI2","ROI3","ROI4","ROI5"]:
 fig.savefig(f"../results_{file_name}/contraste_vs_g_data/T_NOGSE={T_NOGSE}/NOGSE_Contraste_vs_g_t={T_NOGSE}.pdf")
 fig.savefig(f"../results_{file_name}/contraste_vs_g_data/T_NOGSE={T_NOGSE}/NOGSE_Contraste_vs_g_t={T_NOGSE}.png", dpi=600)
 plt.close(fig)
-
-"""
-table = np.vstack((g_contrast_fit, fit))
-np.savetxt(f"../results_{file_name}/contraste_vs_g_data/T_NOGSE={T_NOGSE}/{i}_Ajuste_Contraste_vs_g_t={T_NOGSE}.txt", table.T, delimiter=' ', newline='\n')
-
-    if(i == "ROI1"):
-        color = "green"
-    if(i == "ROI2"):
-        color = "darkorange"
-    if(i == "ROIw"):
-        color = "blue"
-"""    

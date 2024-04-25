@@ -7,7 +7,6 @@ from lmfit import Minimizer, create_params, fit_report
 import glob 
 from brukerapi.dataset import Dataset as ds
 import seaborn as sns
-from roi_select import roi_select
 
 sns.set(context='paper')
 sns.set_style("whitegrid")
@@ -118,8 +117,8 @@ def upload_data_delta_M(file_name, mask):
     rangos_e_cpmg = input("Ingresa los rangos de carpetas para E_cpmg (desde-hasta,desde-hasta,...): ")
     carpetas_e_hahn = generar_rangos_discontinuos(rangos_e_hahn)
     carpetas_e_cpmg = generar_rangos_discontinuos(rangos_e_cpmg)
-    image_paths = [glob.glob(f"../data_" + file_name + "/{}/pdata/1/2dseq".format(carpeta))[0] for carpeta in carpetas_e_hahn + carpetas_e_cpmg]
-    method_paths = [glob.glob(f"../data_" + file_name + "/{}/method".format(carpeta))[0] for carpeta in carpetas_e_hahn + carpetas_e_cpmg]
+    image_paths = [glob.glob(f"C:/Users/Ignacio Lembo/Documents/data/data_" + file_name + "/{}/pdata/1/2dseq".format(carpeta))[0] for carpeta in carpetas_e_hahn + carpetas_e_cpmg]
+    method_paths = [glob.glob(f"C:/Users/Ignacio Lembo/Documents/data/data_" + file_name + "/{}/method".format(carpeta))[0] for carpeta in carpetas_e_hahn + carpetas_e_cpmg]
 
     experiments = []
     A0s = []
@@ -127,8 +126,9 @@ def upload_data_delta_M(file_name, mask):
 
     for image_path, method_path in zip(image_paths, method_paths):
         ims = ds(image_path).data
-        A0s.append(ims[:,:,0,0]) 
-        experiments.append(ims[:,:,0,1])
+        #print(image_path)
+        A0s.append(ims[:,:,1,0]) 
+        experiments.append(ims[:,:,1,1])
         param_dict = nogse_params(method_path)
         param_list = list(param_dict.values())
         params.append(param_list)
@@ -142,7 +142,7 @@ def upload_data_delta_M(file_name, mask):
 
     M_matrix = np.array(experiments)
     A0_matrix = np.array(A0s)
-    E_matrix = M_matrix/A0_matrix
+    E_matrix = M_matrix #/A0_matrix
 
     N = len(E_matrix) # numero de experimentos
     middle_idx = int(N/2) # indice de la mitad del array
