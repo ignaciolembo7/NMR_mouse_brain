@@ -7,6 +7,7 @@ from lmfit import Minimizer, create_params, fit_report
 import glob 
 from brukerapi.dataset import Dataset as ds
 import seaborn as sns
+import cv2
 
 sns.set(context='paper')
 sns.set_style("whitegrid")
@@ -103,8 +104,8 @@ def nogse_params(method_path):
 
         return {"t_nogse": t_nogse, "ramp_grad_str": ramp_grad_str, "ramp_grad_N": ramp_grad_N, "ramp_grad_x": ramp_grad_x, "EchoTime": EchoTime}
 
-def upload_data_delta_M(file_name, mask):
-    
+def upload_contrast_data(file_name):
+
     def generar_rangos_discontinuos(rangos_str):
         carpetas = []
         for rango in rangos_str.split(','):
@@ -112,53 +113,68 @@ def upload_data_delta_M(file_name, mask):
             carpetas.extend([str(numero) for numero in range(desde, hasta + 1)])
         return carpetas
 
-    # Pide al usuario que ingrese los rangos de carpetas para E_hahn y E_cpmg
     rangos_e_hahn = input("Ingresa los rangos de carpetas para E_hahn (desde-hasta,desde-hasta,...): ")
     rangos_e_cpmg = input("Ingresa los rangos de carpetas para E_cpmg (desde-hasta,desde-hasta,...): ")
     carpetas_e_hahn = generar_rangos_discontinuos(rangos_e_hahn)
     carpetas_e_cpmg = generar_rangos_discontinuos(rangos_e_cpmg)
-    image_paths = [glob.glob(f"C:/Users/Ignacio Lembo/Documents/data/data_" + file_name + "/{}/pdata/1/2dseq".format(carpeta))[0] for carpeta in carpetas_e_hahn + carpetas_e_cpmg]
-    method_paths = [glob.glob(f"C:/Users/Ignacio Lembo/Documents/data/data_" + file_name + "/{}/method".format(carpeta))[0] for carpeta in carpetas_e_hahn + carpetas_e_cpmg]
 
+    image_paths = []
+    method_paths = []
+
+    error_carpeta = None  # Variable para almacenar el número de carpeta donde ocurre el error
+
+    for carpeta in carpetas_e_hahn + carpetas_e_cpmg:
+        try:
+            image_path = glob.glob(f"C:/Users/Ignacio Lembo/Documents/Repositorios/data/data_" + file_name + "/{}/pdata/1/2dseq".format(carpeta))[0] #Hay que subir la carpeta data/data_mousebrain al area de trabajo en vscode 
+            method_path = glob.glob(f"C:/Users/Ignacio Lembo/Documents/Repositorios/data/data_" + file_name + "/{}/method".format(carpeta))[0]
+            image_paths.append(image_path)
+            method_paths.append(method_path)
+            ims = ds(image_path).data
+        except Exception as e:
+            error_carpeta = carpeta
+            print(f"Error al procesar la carpeta {carpeta}: {e}")
+            break  # Salir del bucle cuando se encuentre el error
+
+    # Si se produjo un error, imprime el número de carpeta
+    if error_carpeta is not None:
+        print(f"El error ocurrió en la carpeta {error_carpeta}.")
+    else:
+        print("No se encontraron errores en el procesamiento de las carpetas.")
+        return image_paths, method_paths
+
+def generate_contrast_roi(image_paths, method_paths, mask):
+    
     experiments = []
     A0s = []
     params = []
-
+    f = []
+    
     for image_path, method_path in zip(image_paths, method_paths):
         ims = ds(image_path).data
-        #print(image_path)
         A0s.append(ims[:,:,1,0]) 
         experiments.append(ims[:,:,1,1])
         param_dict = nogse_params(method_path)
         param_list = list(param_dict.values())
         params.append(param_list)
-                  
-    T_nogse, g, n, x, TE = np.array(params).T # el "T" transpone la matriz de parametros para poder separarlos como los separe en T_nogse, g, n, x.
-
-    print('x: ', x)
-    #print('g: ', g)
-    print('T_NOGSE: ', T_nogse)
-    print('TE: ', TE)
+                
+    T_nogse, g, n, x, TE = np.array(params).T 
 
     M_matrix = np.array(experiments)
     A0_matrix = np.array(A0s)
     E_matrix = M_matrix #/A0_matrix
 
-    N = len(E_matrix) # numero de experimentos
-    middle_idx = int(N/2) # indice de la mitad del array
-    #print("N ", N ," ", middle_idx)
-    E_cpmg = E_matrix[middle_idx:] # segunda mitad
-    E_hahn = E_matrix[:middle_idx] # primer mitad  CUIDADO CUANDO SALTA DE CANTIDAD DE DIGITOS
+    N = len(E_matrix) 
+    middle_idx = int(N/2) 
+    E_cpmg = E_matrix[middle_idx:] 
+    E_hahn = E_matrix[:middle_idx] 
     g_contrast = g[:middle_idx] 
     g_contrast_check = g[middle_idx:] 
-    print("g1: ", g_contrast)
-    print("g2: ", g_contrast_check)
-    contrast_matrix = E_cpmg-E_hahn # los resto
-  
-    result = cv2.bitwise_and(contrast_matrix, contrast_matrix, mask=mask)
-    dM = np.mean(result)
+    contrast_matrix = E_cpmg-E_hahn 
+    for i in range(len(contrast_matrix)):
+        result = cv2.bitwise_and(contrast_matrix[i], contrast_matrix[i], mask=mask)
+        f.append(np.mean(result))
 
-    return T_nogse[0], g_contrast, n[0], dM
+    return T_nogse[0], g_contrast, n[0], f
 
 def upload_data_NOGSE_vs_x(file_name, roi_set):
 
@@ -244,14 +260,14 @@ def plot_contrast_data(ax, nroi, g_contrast, f, tnogse, n):
     #ax.set_xlim(0.5, 10.75)
 
 def plot_contrast_datas(ax, nroi, g_contrast, f, tnogse, n):
-    ax.plot(g_contrast, f, "-o", markersize=7, linewidth = 2)
+    ax.plot(g_contrast, f, "-o", markersize=7, linewidth = 2, label=nroi)
     ax.set_xlabel("Intensidad de gradiente $g$ [mT/m]", fontsize=18)
     ax.set_ylabel("Contraste $\mathrm{NOGSE}$ $\Delta M$", fontsize=18)
-    ax.legend(title=nroi, title_fontsize=18, fontsize=18, loc='upper right')
+    ax.legend(title='$T_\mathrm{{NOGSE}}$ [ms]', title_fontsize=18, fontsize=18, loc='upper right')
     ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
     ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
     ax.tick_params(axis='y', labelsize=16, color='black')
-    title = ax.set_title("$T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} ".format(tnogse, n), fontsize=18)
+    #title = ax.set_title("$T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} ".format(tnogse, n), fontsize=18)
     #ax.set_xlim(0.5, 10.75)
 
 def plot_nogse_vs_x_free(ax, nroi, modelo, x, x_fit, f, fit, tnogse, n, g, alpha):
