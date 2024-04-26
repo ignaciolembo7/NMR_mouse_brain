@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import argparse
 from brukerapi.dataset import Dataset as ds
+import matplotlib.pyplot as plt
 
 # Mouse callback function
 def draw(event, former_x, former_y, flags, param):
@@ -34,27 +35,28 @@ def draw(event, former_x, former_y, flags, param):
     return former_x, former_y
 
 # Main loop
-for i in range(1):
+for i in range(5):
 
     drawing = False  # True if mouse is pressed
     mode = True  # If True, draw rectangle. Press 'm' to toggle to curve
 
-    serial = input("Serial:") #ms
-    dataset = ds("../data_temp/"+ str(serial) +"/pdata/1/2dseq")
-    data = np.array(dataset.data)
-    original = data[:,:,0,1]/np.amax(data[:,:,0,1])
-    #print(original)
-    np.savetxt(f"original", original, fmt='%f')
-    # Escalar la imagen a valores entre 0 y 255
-    im_scaled = (original * 255).astype(np.uint8)
-    # Guardar la imagen
-    cv2.imwrite("original.jpg", im_scaled)
+    serial = 81 #input("Serial:") #ms
+    ims = ds(f"../data_temp/"+ str(serial) +"/pdata/1/2dseq").data
+    A0_matrix = ims[:,:,1,0]
+    M_matrix = ims[:,:,1,1]
+    original = M_matrix #/A0_matrix 
 
-    im = cv2.imread("original.jpg", cv2.IMREAD_GRAYSCALE)
-    #im = cv2.imread("Darwin.jpg", cv2.IMREAD_GRAYSCALE)
-   
+    np.savetxt(f"rois/original.txt", original, fmt='%f')
+
+    #Equalize original
+    original_eq = 255 * (original - np.min(original)) / (np.max(original) - np.min(original)) + 255*(np.min(original) / (np.max(original) - np.min(original)) )
+
+    cv2.imwrite(f"rois/original_eq.jpg", original_eq)
+
+    im = cv2.imread(f"rois/original_eq.jpg", cv2.IMREAD_GRAYSCALE)
+
     # Escalar la imagen para que se vea más grande
-    scaling_factor = 3  # Factor de escala (puedes ajustarlo según sea necesario)
+    scaling_factor = 5  # Factor de escala (puedes ajustarlo según sea necesario)
     im_scaled = cv2.resize(im, None, fx=scaling_factor, fy=scaling_factor)
     mask = np.zeros_like(im_scaled)  # Create a black image with the same size as im
     
@@ -71,25 +73,20 @@ for i in range(1):
     mask_inverted = cv2.bitwise_not(mask)
     # Resize the inverted mask to match the size of the original image
     mask_resized = cv2.resize(mask_inverted, (original.shape[1], original.shape[0]))
+
+    np.savetxt(f"rois/roi_{i+1}.txt", mask_resized, fmt='%f')
+    cv2.imwrite(f"rois/roi_{i+1}.jpg", mask_resized)
     # Apply the mask to the original image
     result = cv2.bitwise_and(original, original, mask=mask_resized)
-
-    # Escalar la máscara para que tenga el mismo tamaño que la imagen original
-    mask_resized_original = cv2.resize(mask_resized, (original.shape[1], original.shape[0]))
-
-    # Escalar la ROI para que tenga el mismo tamaño que la imagen original
-    result_resized_original = cv2.resize(result, (original.shape[1], original.shape[0]))
-
-    # Aplicar la máscara y la ROI escaladas a la imagen original
-    final_result = cv2.bitwise_and(original, original, mask=mask_resized_original)
-
-    # Guardar la imagen escalada a tamaño original
-    cv2.imwrite(f"roi_{i+1}.jpg", final_result)
-
+    
     # Save mask as text
-    np.savetxt(f"roi_{i+1}.txt", mask_resized_original, fmt='%d')
+    np.savetxt(f"rois/result_roi_{i+1}.txt", result, fmt='%f')
 
     signal = np.mean(result)
     print(f"Average intensity of ROI {i+1}: {signal}")
+
+    result = (result * 255).astype(np.uint8)
+    # Guardar la imagen escalada a tamaño original
+    cv2.imwrite(f"rois/result_roi_{i+1}.jpg", result)
 
 cv2.destroyAllWindows()
