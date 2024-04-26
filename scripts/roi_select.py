@@ -34,29 +34,29 @@ def draw(event, former_x, former_y, flags, param):
 
     return former_x, former_y
 
-# Main loop
-for i in range(5):
+serial = 81 #input("Serial:") #ms
+nrois = 1 #input("Nrois:") #ms
+ims = ds(f"../data_temp/"+ str(serial) +"/pdata/1/2dseq").data
+A0_matrix = ims[:,:,1,0]
+M_matrix = ims[:,:,1,1]
+original = M_matrix #/A0_matrix 
+
+np.savetxt(f"rois/original.txt", original, fmt='%f')
+
+#Equalize original
+original_eq = 255 * (original - np.min(original)) / (np.max(original) - np.min(original)) + 255*(np.min(original) / (np.max(original) - np.min(original)) )
+
+cv2.imwrite(f"rois/original_eq.jpg", original_eq)
+
+im = cv2.imread(f"rois/original_eq.jpg", cv2.IMREAD_GRAYSCALE)
+
+for i in range(nrois):
 
     drawing = False  # True if mouse is pressed
     mode = True  # If True, draw rectangle. Press 'm' to toggle to curve
 
-    serial = 81 #input("Serial:") #ms
-    ims = ds(f"../data_temp/"+ str(serial) +"/pdata/1/2dseq").data
-    A0_matrix = ims[:,:,1,0]
-    M_matrix = ims[:,:,1,1]
-    original = M_matrix #/A0_matrix 
-
-    np.savetxt(f"rois/original.txt", original, fmt='%f')
-
-    #Equalize original
-    original_eq = 255 * (original - np.min(original)) / (np.max(original) - np.min(original)) + 255*(np.min(original) / (np.max(original) - np.min(original)) )
-
-    cv2.imwrite(f"rois/original_eq.jpg", original_eq)
-
-    im = cv2.imread(f"rois/original_eq.jpg", cv2.IMREAD_GRAYSCALE)
-
     # Escalar la imagen para que se vea más grande
-    scaling_factor = 5  # Factor de escala (puedes ajustarlo según sea necesario)
+    scaling_factor = 7  # Factor de escala (puedes ajustarlo según sea necesario)
     im_scaled = cv2.resize(im, None, fx=scaling_factor, fy=scaling_factor)
     mask = np.zeros_like(im_scaled)  # Create a black image with the same size as im
     
@@ -70,7 +70,9 @@ for i in range(5):
             break
 
     # Invert the mask
+    mask[mask != 0] = 255
     mask_inverted = cv2.bitwise_not(mask)
+    
     # Resize the inverted mask to match the size of the original image
     mask_resized = cv2.resize(mask_inverted, (original.shape[1], original.shape[0]))
 
@@ -90,3 +92,31 @@ for i in range(5):
     cv2.imwrite(f"rois/result_roi_{i+1}.jpg", result)
 
 cv2.destroyAllWindows()
+
+# Iterar sobre todas las máscaras de las ROIs y superponerlas en la imagen final
+imagen_final = im.copy()
+
+for i in range(1, nrois+1): 
+    mask_roi = cv2.imread(f"rois/roi_{i}.jpg", cv2.IMREAD_GRAYSCALE)
+    imagen_final = cv2.add(imagen_final, mask_roi)
+
+# Guardar la imagen final
+cv2.imwrite("imagen_final.jpg", imagen_final)
+
+# Cargar la imagen en escala de grises
+imagen_final = cv2.imread('imagen_final.jpg', cv2.IMREAD_GRAYSCALE)
+
+# Convertir la imagen en escala de grises a color
+imagen_color = cv2.cvtColor(imagen_final, cv2.COLOR_GRAY2BGR)
+
+# Definir el color rojo en RGB
+color_rojo = (0, 0, 255.0)  # (B, G, R)
+
+# Encontrar los píxeles blancos en la imagen en escala de grises
+indices_blancos = np.where((imagen_final >= 245) & (imagen_final <= 255))
+
+# Reemplazar los píxeles blancos por rojo en la imagen a color
+imagen_color[indices_blancos] = color_rojo
+
+# Guardar la imagen final
+cv2.imwrite("imagen_final_color.jpg", imagen_color)
