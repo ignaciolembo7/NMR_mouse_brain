@@ -9,20 +9,17 @@ from nogse import nogse
 ns = input('Numero de serie: ') 
 file_name = "mousebrain_20200409" #resultados
 
-im_path = f"C:/Users/Ignacio Lembo/Documents/data/data_{file_name}/"+str(ns)+"/pdata/1/2dseq" # dirección donde guardo la carpeta del experimento.
+im_path = f"C:/Users/Ignacio Lembo/Documents/Repositorios/data/data_{file_name}/"+str(ns)+"/pdata/1/2dseq" # dirección donde guardo la carpeta del experimento.
 
 images = ds(im_path).data
 
 print("Dimensión del array: {}".format(images.shape))
 
 
-A0 = images[:,:,0,0] # asi se accede a los elementos de un array de numpy, los ":" dicen que quiero quedarme
-                     # con todas los numeros en esa dimensión, mientras que selecciono si quiero la A0 o el
-                     # experimento poniendo 1 o 0 en la ultima dimensión.
-        
-experiment = images[:,:,0,1]
+A0 = images[:,:,1,0] # asi se accede a los elementos de un array de numpy, los ":" dicen que quiero quedarme con todas los numeros en esa dimensión, mientras que selecciono si quiero la A0 o el experimento poniendo 1 o 0 en la ultima dimensión.
+experiment = images[:,:,1,1]
 
-method_path = f"C:/Users/Ignacio Lembo/Documents/data/data_{file_name}/"+str(ns)+"/method"
+method_path = f"C:/Users/Ignacio Lembo/Documents/Repositorios/data/data_{file_name}/"+str(ns)+"/method"
 
 params = nogse.nogse_params(method_path)
 params_img = nogse.nogse_image_params(method_path)

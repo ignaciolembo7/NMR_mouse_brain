@@ -125,8 +125,8 @@ def upload_contrast_data(file_name):
 
     for carpeta in carpetas_e_hahn + carpetas_e_cpmg:
         try:
-            image_path = glob.glob(f"C:/Users/Ignacio Lembo/Documents/Repositorios/data/data_" + file_name + "/{}/pdata/1/2dseq".format(carpeta))[0] #Hay que subir la carpeta data/data_mousebrain al area de trabajo en vscode 
-            method_path = glob.glob(f"C:/Users/Ignacio Lembo/Documents/Repositorios/data/data_" + file_name + "/{}/method".format(carpeta))[0]
+            image_path = glob.glob("C:/Users/Ignacio Lembo/Documents/Repositorios/data/data_" + file_name + "/{}/pdata/1/2dseq".format(carpeta))[0] #
+            method_path = glob.glob("C:/Users/Ignacio Lembo/Documents/Repositorios/data/data_" + file_name + "/{}/method".format(carpeta))[0]
             image_paths.append(image_path)
             method_paths.append(method_path)
             ims = ds(image_path).data
@@ -158,6 +158,8 @@ def generate_contrast_roi(image_paths, method_paths, mask):
         params.append(param_list)
                 
     T_nogse, g, n, x, TE = np.array(params).T 
+    print("g",g)
+    print("T_nogse",T_nogse)
 
     M_matrix = np.array(experiments)
     A0_matrix = np.array(A0s)
@@ -169,9 +171,18 @@ def generate_contrast_roi(image_paths, method_paths, mask):
     E_hahn = E_matrix[:middle_idx] 
     g_contrast = g[:middle_idx] 
     g_contrast_check = g[middle_idx:] 
-    contrast_matrix = E_cpmg-E_hahn 
+    print("g_contrast_check",g_contrast_check)
+    print("g_contrast",g_contrast)
+    contrast_matrix = E_cpmg-E_hahn
+
     for i in range(len(contrast_matrix)):
+        np.savetxt(f"contrast_matrix.txt", contrast_matrix[i], fmt='%f')
+        cv2.imwrite(f"contrast_matrix.jpg", contrast_matrix[i])
         result = cv2.bitwise_and(contrast_matrix[i], contrast_matrix[i], mask=mask)
+        cv2.imwrite(f"result.jpg", result)
+        np.savetxt(f"result.txt", result, fmt='%f')
+        cv2.imwrite(f"mask.jpg", mask)
+        np.savetxt(f"mask.txt", mask, fmt='%f')
         f.append(np.mean(result))
 
     return T_nogse[0], g_contrast, n[0], f
