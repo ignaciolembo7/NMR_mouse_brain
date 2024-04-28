@@ -17,16 +17,16 @@ def draw(event, former_x, former_y, flags, param):
     elif event == cv2.EVENT_MOUSEMOVE:
         if drawing == True:
             if mode == True:
-                cv2.line(im_scaled, (current_former_x, current_former_y), (former_x, former_y), (255), 1)
-                cv2.line(mask, (current_former_x, current_former_y), (former_x, former_y), (255), 1)
+                cv2.line(im_scaled, (current_former_x, current_former_y), (former_x, former_y), (255), 2)
+                cv2.line(mask, (current_former_x, current_former_y), (former_x, former_y), (255), 2)
                 current_former_x = former_x
                 current_former_y = former_y
 
     elif event == cv2.EVENT_LBUTTONUP:
         drawing = False
         if mode == True:
-            cv2.line(im_scaled, (current_former_x, current_former_y), (former_x, former_y), (255), 1)
-            cv2.line(mask, (current_former_x, current_former_y), (former_x, former_y), (255), 1)
+            cv2.line(im_scaled, (current_former_x, current_former_y), (former_x, former_y), (255), 2)
+            cv2.line(mask, (current_former_x, current_former_y), (former_x, former_y), (255), 2)
             current_former_x = former_x
             current_former_y = former_y
             # Fill the enclosed area in the mask with white
@@ -34,9 +34,9 @@ def draw(event, former_x, former_y, flags, param):
 
     return former_x, former_y
 
-serial = 81 #input("Serial:") #ms
-nrois = 1 #input("Nrois:") #ms
-ims = ds(f"../data_temp/"+ str(serial) +"/pdata/1/2dseq").data
+serial = input("Serial:") #ms
+nrois = 5 #input("Nrois:") #ms
+ims = ds(f"C:/Users/Ignacio Lembo/Documents/Repositorios/data/data_mousebrain_20200409/"+str(serial)+"/pdata/1/2dseq").data
 A0_matrix = ims[:,:,1,0]
 M_matrix = ims[:,:,1,1]
 original = M_matrix #/A0_matrix 
@@ -56,7 +56,7 @@ for i in range(nrois):
     mode = True  # If True, draw rectangle. Press 'm' to toggle to curve
 
     # Escalar la imagen para que se vea más grande
-    scaling_factor = 7  # Factor de escala (puedes ajustarlo según sea necesario)
+    scaling_factor = 8 # Factor de escala (puedes ajustarlo según sea necesario)
     im_scaled = cv2.resize(im, None, fx=scaling_factor, fy=scaling_factor)
     mask = np.zeros_like(im_scaled)  # Create a black image with the same size as im
     
@@ -70,26 +70,27 @@ for i in range(nrois):
             break
 
     # Invert the mask
-    mask[mask != 0] = 255
+
     mask_inverted = cv2.bitwise_not(mask)
     
     # Resize the inverted mask to match the size of the original image
     mask_resized = cv2.resize(mask_inverted, (original.shape[1], original.shape[0]))
-
-    np.savetxt(f"rois/roi_{i+1}.txt", mask_resized, fmt='%f')
-    cv2.imwrite(f"rois/roi_{i+1}.jpg", mask_resized)
+    mask_resized[mask_resized != 0] = 255
+        
     # Apply the mask to the original image
-    result = cv2.bitwise_and(original, original, mask=mask_resized)
-    
-    # Save mask as text
-    np.savetxt(f"rois/result_roi_{i+1}.txt", result, fmt='%f')
-
-    signal = np.mean(result)
+    roi = np.zeros_like(original)
+    roi[mask_resized == 255] = original[mask_resized == 255]
+    signal = np.mean(roi[roi != 0])
     print(f"Average intensity of ROI {i+1}: {signal}")
 
-    result = (result * 255).astype(np.uint8)
-    # Guardar la imagen escalada a tamaño original
-    cv2.imwrite(f"rois/result_roi_{i+1}.jpg", result)
+    # Save roi
+    np.savetxt(f"rois/roi_{i+1}.txt", roi, fmt='%f')
+    roi = (roi * 255).astype(np.uint8)
+    cv2.imwrite(f"rois/roi_{i+1}.jpg", roi)
+
+    # Save mask
+    np.savetxt(f"rois/mask_{i+1}.txt", mask_resized, fmt='%f')
+    cv2.imwrite(f"rois/mask_{i+1}.jpg", mask_resized)
 
 cv2.destroyAllWindows()
 
@@ -97,14 +98,14 @@ cv2.destroyAllWindows()
 imagen_final = im.copy()
 
 for i in range(1, nrois+1): 
-    mask_roi = cv2.imread(f"rois/roi_{i}.jpg", cv2.IMREAD_GRAYSCALE)
+    mask_roi = cv2.imread(f"rois/mask_{i}.jpg", cv2.IMREAD_GRAYSCALE)
     imagen_final = cv2.add(imagen_final, mask_roi)
 
 # Guardar la imagen final
-cv2.imwrite("imagen_final.jpg", imagen_final)
+cv2.imwrite("rois/imagen_final.jpg", imagen_final)
 
 # Cargar la imagen en escala de grises
-imagen_final = cv2.imread('imagen_final.jpg', cv2.IMREAD_GRAYSCALE)
+imagen_final = cv2.imread('rois/imagen_final.jpg', cv2.IMREAD_GRAYSCALE)
 
 # Convertir la imagen en escala de grises a color
 imagen_color = cv2.cvtColor(imagen_final, cv2.COLOR_GRAY2BGR)
@@ -113,10 +114,10 @@ imagen_color = cv2.cvtColor(imagen_final, cv2.COLOR_GRAY2BGR)
 color_rojo = (0, 0, 255.0)  # (B, G, R)
 
 # Encontrar los píxeles blancos en la imagen en escala de grises
-indices_blancos = np.where((imagen_final >= 245) & (imagen_final <= 255))
+indices_blancos = np.where((imagen_final >= 250) & (imagen_final <= 255))
 
 # Reemplazar los píxeles blancos por rojo en la imagen a color
 imagen_color[indices_blancos] = color_rojo
 
 # Guardar la imagen final
-cv2.imwrite("imagen_final_color.jpg", imagen_color)
+cv2.imwrite("rois/imagen_final_color.jpg", imagen_color)

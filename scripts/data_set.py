@@ -8,16 +8,16 @@ from nogse import nogse
 #Numero de serie del experimento
 ns = input('Numero de serie: ') 
 file_name = "mousebrain_20200409" #resultados
-
 im_path = f"C:/Users/Ignacio Lembo/Documents/Repositorios/data/data_{file_name}/"+str(ns)+"/pdata/1/2dseq" # dirección donde guardo la carpeta del experimento.
+slic = 1 # slice que quiero ver 0 o 1 
 
 images = ds(im_path).data
 
 print("Dimensión del array: {}".format(images.shape))
 
 
-A0 = images[:,:,1,0] # asi se accede a los elementos de un array de numpy, los ":" dicen que quiero quedarme con todas los numeros en esa dimensión, mientras que selecciono si quiero la A0 o el experimento poniendo 1 o 0 en la ultima dimensión.
-experiment = images[:,:,1,1]
+A0 = images[:,:,slic,0] # asi se accede a los elementos de un array de numpy, los ":" dicen que quiero quedarme con todas los numeros en esa dimensión, mientras que selecciono si quiero la A0 o el experimento poniendo 1 o 0 en la ultima dimensión.
+experiment = images[:,:,slic,1]
 
 method_path = f"C:/Users/Ignacio Lembo/Documents/Repositorios/data/data_{file_name}/"+str(ns)+"/method"
 

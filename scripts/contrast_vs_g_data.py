@@ -23,18 +23,16 @@ fig, ax = plt.subplots(figsize=(8,6)) #Imagen de todas las ROIS juntas
 
 for i in ["ROI1","ROI2","ROI3","ROI4","ROI5"]: 
 
-    #mask = np.loadtxt(f"rois/roi_"+ str(idx+1) +".txt")
-
-    mask = cv2.imread(f"rois/roi_"+ str(idx+1) +".jpg", cv2.IMREAD_GRAYSCALE)
+    mask = np.loadtxt(f"rois/mask_"+ str(idx+1) +".txt")
 
     fig1, ax1 = plt.subplots(figsize=(8,6)) #Imagen de cada ROI
     
-    T_nogse, g_contrast, n, roi =  nogse.generate_contrast_roi(image_paths, method_paths, mask)
+    T_nogse, g_contrast, n, f =  nogse.generate_contrast_roi(image_paths, method_paths, mask)
 
-    nogse.plot_contrast_datas(ax, i, g_contrast, roi, T_nogse, n)
-    nogse.plot_contrast_data(ax1, i, g_contrast, roi, T_nogse, n)
+    nogse.plot_contrast_ptROI(ax, i, g_contrast, f, T_nogse, n)
+    nogse.plot_contrast_data(ax1, i, g_contrast, f, T_nogse, n)
 
-    table = np.vstack((g_contrast, roi))
+    table = np.vstack((g_contrast, f))
     np.savetxt(f"../results_{file_name}/contraste_vs_g_data/T_NOGSE={T_NOGSE}/{i}_Datos_Contraste_vs_g_t={T_NOGSE}.txt", table.T, delimiter=' ', newline='\n')
 
     fig1.savefig(f"../results_{file_name}/contraste_vs_g_data/T_NOGSE={T_NOGSE}/{i}_NOGSE_Contraste_vs_g_t={T_NOGSE}.pdf")

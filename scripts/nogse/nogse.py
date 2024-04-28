@@ -1,4 +1,4 @@
-#NMRSI - Ignacio Lembo Ferrari - 25/04/2024
+#NMRSI - Ignacio Lembo Ferrari - 27/04/2024
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -120,16 +120,20 @@ def upload_contrast_data(file_name):
 
     image_paths = []
     method_paths = []
+    experiments = []
+    A0s = []
 
     error_carpeta = None  # Variable para almacenar el número de carpeta donde ocurre el error
 
     for carpeta in carpetas_e_hahn + carpetas_e_cpmg:
         try:
-            image_path = glob.glob("C:/Users/Ignacio Lembo/Documents/Repositorios/data/data_" + file_name + "/{}/pdata/1/2dseq".format(carpeta))[0] #
+            image_path = glob.glob("C:/Users/Ignacio Lembo/Documents/Repositorios/data/data_" + file_name + "/{}/pdata/1/2dseq".format(carpeta))[0] 
             method_path = glob.glob("C:/Users/Ignacio Lembo/Documents/Repositorios/data/data_" + file_name + "/{}/method".format(carpeta))[0]
             image_paths.append(image_path)
             method_paths.append(method_path)
             ims = ds(image_path).data
+            A0s.append(ims[:,:,1,0]) 
+            experiments.append(ims[:,:,1,1])
         except Exception as e:
             error_carpeta = carpeta
             print(f"Error al procesar la carpeta {carpeta}: {e}")
@@ -171,23 +175,18 @@ def generate_contrast_roi(image_paths, method_paths, mask):
     E_hahn = E_matrix[:middle_idx] 
     g_contrast = g[:middle_idx] 
     g_contrast_check = g[middle_idx:] 
-    print("g_contrast_check",g_contrast_check)
-    print("g_contrast",g_contrast)
+    #print("g_contrast_check",g_contrast_check)
+    #print("g_contrast",g_contrast)
     contrast_matrix = E_cpmg-E_hahn
 
     for i in range(len(contrast_matrix)):
-        np.savetxt(f"contrast_matrix.txt", contrast_matrix[i], fmt='%f')
-        cv2.imwrite(f"contrast_matrix.jpg", contrast_matrix[i])
-        result = cv2.bitwise_and(contrast_matrix[i], contrast_matrix[i], mask=mask)
-        cv2.imwrite(f"result.jpg", result)
-        np.savetxt(f"result.txt", result, fmt='%f')
-        cv2.imwrite(f"mask.jpg", mask)
-        np.savetxt(f"mask.txt", mask, fmt='%f')
-        f.append(np.mean(result))
+        roi = np.zeros_like(contrast_matrix[i])
+        roi[mask == 255] = contrast_matrix[i][mask == 255]
+        f.append(np.mean(roi[roi != 0]))
 
     return T_nogse[0], g_contrast, n[0], f
 
-def upload_data_NOGSE_vs_x(file_name, roi_set):
+def upload_NOGSE_vs_x_data(file_name):
 
     def generar_rangos_discontinuos(rangos_str):
         carpetas = []
@@ -195,50 +194,106 @@ def upload_data_NOGSE_vs_x(file_name, roi_set):
             desde, hasta = map(int, rango.split('-'))
             carpetas.extend([str(numero) for numero in range(desde, hasta + 1)])
         return carpetas
-    folder_ranges = input('Ingrese un conjunto de rangos de carpetas, por ejemplo, 106-108,110-115, ... : ')
-    carpetas_a_procesar = generar_rangos_discontinuos(folder_ranges)
 
-    data_folders = []
-    method_folders = []
-    for carpeta in carpetas_a_procesar:
-        data_folders.extend(glob.glob(f"../data_{file_name}/{carpeta}/pdata/1/2dseq"))
-        method_folders.extend(glob.glob(f"../data_{file_name}/{carpeta}/method"))
+    folder_ranges = input('Ingrese un conjunto de rangos de carpetas, por ejemplo, 106-108,110-115, ... : ')
+    carpetas = generar_rangos_discontinuos(folder_ranges)
+
+    image_paths = []
+    method_paths = []
     experiments = []
     A0s = []
     params = []
 
-    for image_path, method_path in zip(data_folders, method_folders):
-  
-        ims = ds(image_path).data
-        A0s.append(ims[:, :, 0, 0])
-        experiments.append(ims[:, :, 0, 1])
+    error_carpeta = None  # Variable para almacenar el número de carpeta donde ocurre el error
 
+    for carpeta in carpetas:
+        try:
+            image_path = glob.glob("C:/Users/Ignacio Lembo/Documents/Repositorios/data/data_" + file_name + "/{}/pdata/1/2dseq".format(carpeta))[0] 
+            method_path = glob.glob("C:/Users/Ignacio Lembo/Documents/Repositorios/data/data_" + file_name + "/{}/method".format(carpeta))[0]
+            image_paths.append(image_path)
+            method_paths.append(method_path)
+            ims = ds(image_path).data
+            A0s.append(ims[:,:,1,0]) 
+            experiments.append(ims[:,:,1,1])
+        except Exception as e:
+            error_carpeta = carpeta
+            print(f"Error al procesar la carpeta {carpeta}: {e}")
+            break  # Salir del bucle cuando se encuentre el error
+
+    # Si se produjo un error, imprime el número de carpeta
+    if error_carpeta is not None:
+        print(f"El error ocurrió en la carpeta {error_carpeta}.")
+    else:
+        print("No se encontraron errores en el procesamiento de las carpetas.")
+        return image_paths, method_paths
+
+def generate_NOGSE_vs_x_roi(image_paths, method_paths, mask):
+    
+    experiments = []
+    A0s = []
+    params = []
+    f = []
+    
+    for image_path, method_path in zip(image_paths, method_paths):
+        ims = ds(image_path).data
+        A0s.append(ims[:,:,1,0]) 
+        experiments.append(ims[:,:,1,1])
         param_dict = nogse_params(method_path)
         param_list = list(param_dict.values())
         params.append(param_list)
+                
+    T_nogse, g, n, x, TE = np.array(params).T 
+    print("g",g)
+    print("T_nogse",T_nogse)
+    print("x",x)
 
-    T_nogse, g, n, x, TE = np.array(params).T # el "T" transpone la matriz de parametros para poder separarlos como los separe en T_nogse, g, n, x.
-    print('x: ', x)
-    print('g: ', g)
-    print('T_NOGSE: ', T_nogse)
-    experiments = np.array(experiments)
-    A0s = np.array(A0s)
+    M_matrix = np.array(experiments)
+    A0_matrix = np.array(A0s)
+    E_matrix = M_matrix #/A0_matrix
 
-    #fig, ax = plt.subplots(figsize=(6,6))
-    #ax.imshow(experiments[0], cmap="gray")
-    #ax.axis("off")
-    #title = ax.set_title("$T_\mathrm{{NOGSE}}$ = {} ms  ||  $g$ = {} mT/m\n  $N$ = {}  ||  x = {} ms  ".format(T_nogse[0], g[0], n[0], x[0]), fontsize=20)
-    #plt.savefig(f"../results_{file_name}/{modelo}/NOGSE_vs_x/Image_{T_NOGSE}_{round(g[0])}.png")
-    #print("Roi set: \n", roi_set)
-    #rois_example = nogse.circle_roi(experiments[0], roi_set)
-    #print("M_f1 = {}, M_f2 = {}, M_w = {}".format(*rois_example),"\n")
+    for i in range(len(E_matrix)):
+        roi = np.zeros_like(E_matrix[i])
+        roi[mask == 255] = E_matrix[i][mask == 255]
+        f.append(np.mean(roi[roi != 0]))
 
-    M_matrix = np.array([circle_roi(exp, roi_set) for exp in experiments])
-    A0_matrix = np.array([circle_roi(A0, roi_set) for A0 in A0s])
-    E_matrix = M_matrix/A0_matrix
-    f1, f2, f3, f4, f5= E_matrix.T
+    return T_nogse[0], g[0], x, n[0], f
 
-    return T_nogse[0], g[0], n[0], x, f1, f2, f3, f4, f5
+def plot_contrast_data(ax, nroi, g_contrast, f, tnogse, n):
+    ax.plot(g_contrast, f, "-o", markersize=7, linewidth = 2, label=nroi)
+    ax.set_xlabel("Intensidad de gradiente $g$ [mT/m]", fontsize=18)
+    ax.set_ylabel("Contraste $\mathrm{NOGSE}$ $\Delta M$", fontsize=18)
+    #ax.legend(title='$T_\mathrm{{NOGSE}}$ [ms]', title_fontsize=18, fontsize=18, loc='upper right')
+    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
+    ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
+    ax.tick_params(axis='y', labelsize=16, color='black')
+    title = ax.set_title("$T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} ".format(tnogse, n), fontsize=18)
+    #ax.set_xlim(0.5, 10.75)
+
+def plot_contrast_ptROI(ax, nroi, g_contrast, f, tnogse, n):
+    ax.plot(g_contrast, f, "-o", markersize=7, linewidth = 2, label=nroi)
+    ax.set_xlabel("Intensidad de gradiente $g$ [mT/m]", fontsize=18)
+    ax.set_ylabel("Contraste $\mathrm{NOGSE}$ $\Delta M$", fontsize=18)
+    ax.legend(title='ROI', title_fontsize=18, fontsize=18, loc='upper right')
+    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
+    ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
+    ax.tick_params(axis='y', labelsize=16, color='black')
+    title = ax.set_title("$T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} ".format(tnogse, n), fontsize=18)
+    #ax.set_xlim(0.5, 10.75)
+
+def plot_nogse_vs_x_data(ax, nroi, x, f, tnogse, n):
+    ax.plot(x, f, "-o", markersize=7, linewidth = 2, label=nroi)
+    ax.set_xlabel("Tiempo de modulación $x$ [ms]", fontsize=18)
+    ax.set_ylabel("Señal $\mathrm{NOGSE}$ [u.a.]", fontsize=18)
+    ax.legend(title='ROI', title_fontsize=18, fontsize=18, loc='lower right')
+    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
+    ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
+    ax.tick_params(axis='y', labelsize=16, color='black')
+    title = ax.set_title("$T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} ".format(tnogse, n), fontsize=18)
+    #ax.set_xlim(0.5, 10.75)
+
+
+##########################################################################################
+
 
 def plot_contrast_rest_mixto_levs(ax, nroi, modelo, g_contrast, roi, T_nogse, n, t_c_int_fit, t_c_ext_fit, alpha_fit, M0_int, M0_ext, D0_int, D0_ext):
     if(nroi == "ROI1"):
@@ -258,28 +313,6 @@ def plot_contrast_rest_mixto_levs(ax, nroi, modelo, g_contrast, roi, T_nogse, n,
     ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
     ax.tick_params(axis='y', labelsize=16, color='black')
     title = ax.set_title("{} || Modelo: {} || $T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} ".format(nroi, modelo, T_nogse, int(n)), fontsize=18)
-
-def plot_contrast_data(ax, nroi, g_contrast, f, tnogse, n):
-    ax.plot(g_contrast, f, "-o", markersize=7, linewidth = 2)
-    ax.set_xlabel("Intensidad de gradiente $g$ [mT/m]", fontsize=18)
-    ax.set_ylabel("Contraste $\mathrm{NOGSE}$ $\Delta M$", fontsize=18)
-    #ax.legend(title='$T_\mathrm{{NOGSE}}$ [ms]', title_fontsize=18, fontsize=18, loc='upper right')
-    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
-    ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
-    ax.tick_params(axis='y', labelsize=16, color='black')
-    title = ax.set_title("{} || $T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} ".format(nroi, tnogse, n), fontsize=18)
-    #ax.set_xlim(0.5, 10.75)
-
-def plot_contrast_datas(ax, nroi, g_contrast, f, tnogse, n):
-    ax.plot(g_contrast, f, "-o", markersize=7, linewidth = 2, label=nroi)
-    ax.set_xlabel("Intensidad de gradiente $g$ [mT/m]", fontsize=18)
-    ax.set_ylabel("Contraste $\mathrm{NOGSE}$ $\Delta M$", fontsize=18)
-    ax.legend(title='$T_\mathrm{{NOGSE}}$ [ms]', title_fontsize=18, fontsize=18, loc='upper right')
-    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
-    ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
-    ax.tick_params(axis='y', labelsize=16, color='black')
-    #title = ax.set_title("$T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} ".format(tnogse, n), fontsize=18)
-    #ax.set_xlim(0.5, 10.75)
 
 def plot_nogse_vs_x_free(ax, nroi, modelo, x, x_fit, f, fit, tnogse, n, g, alpha):
     ax.plot(x, f, "o", markersize=7, linewidth=2)
@@ -313,17 +346,6 @@ def plot_nogse_vs_x_mixto(ax, nroi, modelo, x, x_fit, f, fit, tnogse, n, g, t_c,
     ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
     ax.tick_params(axis='y', labelsize=16, color='black')
     title = ax.set_title("{} || Modelo: {} || $T_\mathrm{{NOGSE}}$ = {} ms  ||  $g$ = {} ||  $N$ = {} ".format(nroi, modelo, tnogse, g, n), fontsize=18)
-
-def plot_nogse_vs_x_data(ax, nroi, x, f, tnogse, n):
-    ax.plot(x, f, "-o", markersize=7, linewidth = 2)
-    ax.set_xlabel("Tiempo de modulación $x$ [ms]", fontsize=18)
-    ax.set_ylabel("Señal $\mathrm{NOGSE}$ [u.a.]", fontsize=18)
-    #ax.legend(title='$T_\mathrm{{NOGSE}}$ [ms]', title_fontsize=18, fontsize=18, loc='upper right')
-    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
-    ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
-    ax.tick_params(axis='y', labelsize=16, color='black')
-    title = ax.set_title("{} || $T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} ".format(nroi, tnogse, n), fontsize=18)
-    #ax.set_xlim(0.5, 10.75)
 
 def plot_lognorm_dist(ax, nroi, tnogse, n, l_c, l_c_mode, sigma, color):
     dist = lognormal(l_c, sigma, l_c_mode)
@@ -458,50 +480,6 @@ def plot_results_brute(result, best_vals=True, varlabels=None, output=True):
 
     if output is not None:
         plt.savefig(output, bbox_inches="tight", dpi=500) # 
-
-def roi_M(im, roi_set):
-    f1_roi, f2_roi, w_roi = roi_set
-    M_f1 = np.mean(im[f1_roi[1]:f1_roi[1]+f1_roi[3],f1_roi[0]:f1_roi[0]+f1_roi[2]])
-    M_f2 = np.mean(im[f2_roi[1]:f2_roi[1]+f2_roi[3],f2_roi[0]:f2_roi[0]+f2_roi[2]])
-    M_w = np.mean(im[w_roi[1]:w_roi[1]+w_roi[3],w_roi[0]:w_roi[0]+w_roi[2]])
-
-    return [M_f1, M_f2, M_w]
-
-def circle_roi(im, roi_set_):
-    f1_roi, f2_roi, f3_roi, f4_roi, f5_roi = roi_set_
-       
-    x = np.arange(im.shape[1])
-    y = np.arange(im.shape[0])
-
-    M_f1 = 0
-    N_f1 = 1
-    M_f2 = 0
-    N_f2 = 1
-    M_f3 = 0
-    N_f3 = 1
-    M_f4 = 0
-    N_f4 = 1
-    M_f5 = 0
-    N_f5 = 1
-
-    for i, j in np.array(np.meshgrid(x,y)).T.reshape(-1,2):
-        if (i-f1_roi[0])**2 + (j-f1_roi[1])**2 < f1_roi[2]**2:
-            M_f1 = M_f1 + im[j,i]
-            N_f1 += 1
-        if (i-f2_roi[0])**2 + (j-f2_roi[1])**2 < f2_roi[2]**2:
-            M_f2 = M_f2 + im[j,i]
-            N_f2 += 1
-        if (i-f3_roi[0])**2 + (j-f3_roi[1])**2 < f3_roi[2]**2:
-            M_f3 = M_f3 + im[j,i]
-            N_f3 += 1
-        if (i-f4_roi[0])**2 + (j-f4_roi[1])**2 < f4_roi[2]**2:
-            M_f4 = M_f4 + im[j,i]
-            N_f4 += 1
-        if (i-f5_roi[0])**2 + (j-f5_roi[1])**2 < f5_roi[2]**2:
-            M_f5 = M_f5 + im[j,i]
-            N_f5 += 1
-
-    return [M_f1/N_f1, M_f2/N_f2, M_f3/N_f3, M_f4/N_f4, M_f5/N_f5]
 
 def M_nogse_rest(TE, G, N, x, t_c, M0, D0): #D0 =2.3*10**-12
 
