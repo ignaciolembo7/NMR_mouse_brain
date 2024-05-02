@@ -36,10 +36,18 @@ axs[0].set_title("$A_0$", fontsize=18)
 
 axs[1].imshow(experiment, cmap="gray")
 axs[1].axis("off")
-axs[1].set_title( str(ns) + " | " + str(params["t_nogse"]) + " ms | " + str(params["ramp_grad_str"]) + " mT/m" , fontsize=18)
+axs[1].set_title( str(ns) + " | " + str(params["t_nogse"]) + " ms | " + str(params["ramp_grad_str"]) + " mT/m" + str(params["ramp_grad_N"]), fontsize=18) 
 
-#plt.savefig(r"../image_lev_" + str(ns) + "_" + str (T_nogse) + "_" + str(round(g)) + ".png")
 plt.show()
+plt.close(fig)
+
+fig = plt.figure(figsize=(8, 8))  # create a figure with specified size
+plt.imshow(experiment, cmap="gray")
+plt.axis("off")
+plt.title(f"Im {ns} | Tnogse = {params['t_nogse']} ms | G = {params['ramp_grad_str']} mT/m | N = {params['ramp_grad_N']} | slice = {slic}", fontsize=18)
+plt.tight_layout()
+plt.savefig(f"../images/image={ns}_t={params['t_nogse']}_G={params['ramp_grad_str']}_N={params['ramp_grad_N']}_slice={slic}.png")
+plt.close(fig)
 
 """
 # Para acceder a los elementos podemos acceder como un diccionario por nombre o pasarlo a un array y usarlo asi

@@ -1,8 +1,9 @@
-#NMRSI - Ignacio Lembo Ferrari - 27/11/2023
+#NMRSI - Ignacio Lembo Ferrari - 02/05/2024
 
 import numpy as np
 import matplotlib.pyplot as plt
 from nogse import nogse
+import os
 import seaborn as sns
 sns.set(context='paper')
 sns.set_style("whitegrid")
@@ -26,17 +27,23 @@ for i in ["ROI1","ROI2","ROI3","ROI4","ROI5"]:
     
     T_nogse, g, x, n, f =  nogse.generate_NOGSE_vs_x_roi(image_paths, method_paths, mask)
 
+    # Create directory if it doesn't exist
+    directory = f"../results_{file_name}/nogse_vs_x_data/TNOGSE={T_nogse}_G={g}_N={int(n)}"
+    os.makedirs(directory, exist_ok=True)
+
     nogse.plot_nogse_vs_x_data(ax, i, x, f, T_nogse, n)
     nogse.plot_nogse_vs_x_data(ax1, i, x, f, T_nogse, n)
 
     table = np.vstack((x, f))
-    np.savetxt(f"../results_{file_name}/nogse_vs_x_data/T_NOGSE={T_nogse}/{i}_Datos_nogse_vs_x_t={T_nogse}_g={g}.txt", table.T, delimiter=' ', newline='\n')
+    np.savetxt(f"{directory}/{i}_Datos_nogse_vs_x_t={T_nogse}_G={g}_N={int(n)}.txt", table.T, delimiter=' ', newline='\n')
 
-    fig1.savefig(f"../results_{file_name}/nogse_vs_x_data/T_NOGSE={T_nogse}/{i}_nogse_vs_x_t={T_nogse}_g={g}.pdf")
-    fig1.savefig(f"../results_{file_name}/nogse_vs_x_data/T_NOGSE={T_nogse}/{i}_nogse_vs_x_t={T_nogse}_g={g}.png", dpi=600)
+    fig1.tight_layout()
+    fig1.savefig(f"{directory}/{i}_nogse_vs_x_t={T_nogse}_G={g}_N={int(n)}.pdf")
+    fig1.savefig(f"{directory}/{i}_nogse_vs_x_t={T_nogse}_G={g}_N={int(n)}.png", dpi=600)
     plt.close(fig1)
     idx += 1
 
-fig.savefig(f"../results_{file_name}/nogse_vs_x_data/T_NOGSE={T_nogse}/nogse_vs_x_t={T_nogse}_g={g}.pdf")
-fig.savefig(f"../results_{file_name}/nogse_vs_x_data/T_NOGSE={T_nogse}/nogse_vs_x_t={T_nogse}_g={g}.png", dpi=600)
+fig.tight_layout()
+fig.savefig(f"{directory}/nogse_vs_x_t={T_nogse}_G={g}_N={int(n)}.pdf")
+fig.savefig(f"{directory}/nogse_vs_x_t={T_nogse}_G={g}_N={int(n)}.png", dpi=600)
 plt.close(fig)
