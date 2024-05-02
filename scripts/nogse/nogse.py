@@ -262,11 +262,12 @@ def plot_contrast_data(ax, nroi, g_contrast, f, tnogse, n):
     ax.plot(g_contrast, f, "-o", markersize=7, linewidth = 2, label=nroi)
     ax.set_xlabel("Intensidad de gradiente $g$ [mT/m]", fontsize=18)
     ax.set_ylabel("Contraste $\mathrm{NOGSE}$ $\Delta M$", fontsize=18)
-    #ax.legend(title='$T_\mathrm{{NOGSE}}$ [ms]', title_fontsize=18, fontsize=18, loc='upper right')
+    ax.legend(title='ROI', title_fontsize=18, fontsize=18, loc='upper right')
     ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
     ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
     ax.tick_params(axis='y', labelsize=16, color='black')
     title = ax.set_title("$T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} ".format(tnogse, n), fontsize=18)
+    #plt.tight_layout()    
     #ax.set_xlim(0.5, 10.75)
 
 def plot_contrast_ptROI(ax, nroi, g_contrast, f, tnogse, n):
@@ -278,6 +279,7 @@ def plot_contrast_ptROI(ax, nroi, g_contrast, f, tnogse, n):
     ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
     ax.tick_params(axis='y', labelsize=16, color='black')
     title = ax.set_title("$T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} ".format(tnogse, n), fontsize=18)
+    #plt.tight_layout()
     #ax.set_xlim(0.5, 10.75)
 
 def plot_nogse_vs_x_data(ax, nroi, x, f, tnogse, n):
@@ -289,6 +291,7 @@ def plot_nogse_vs_x_data(ax, nroi, x, f, tnogse, n):
     ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
     ax.tick_params(axis='y', labelsize=16, color='black')
     title = ax.set_title("$T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} ".format(tnogse, n), fontsize=18)
+    #plt.tight_layout()
     #ax.set_xlim(0.5, 10.75)
 
 

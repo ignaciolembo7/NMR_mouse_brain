@@ -10,7 +10,7 @@ sns.set(context='paper')
 sns.set_style("whitegrid")
 
 
-T_NOGSE = input('T_NOGSE [ms]: ') #ms
+#T_NOGSE = input('T_NOGSE [ms]: ') #ms
 file_name = "mousebrain_20200409"
 
 image_paths, method_paths = nogse.upload_contrast_data(file_name)
@@ -29,17 +29,19 @@ for i in ["ROI1","ROI2","ROI3","ROI4","ROI5"]:
     
     T_nogse, g_contrast, n, f =  nogse.generate_contrast_roi(image_paths, method_paths, mask)
 
-    nogse.plot_contrast_ptROI(ax, i, g_contrast, f, T_nogse, n)
+    nogse.plot_contrast_data(ax, i, g_contrast, f, T_nogse, n)
     nogse.plot_contrast_data(ax1, i, g_contrast, f, T_nogse, n)
 
     table = np.vstack((g_contrast, f))
-    np.savetxt(f"../results_{file_name}/contraste_vs_g_data/T_NOGSE={T_NOGSE}/{i}_Datos_Contraste_vs_g_t={T_NOGSE}.txt", table.T, delimiter=' ', newline='\n')
-
-    fig1.savefig(f"../results_{file_name}/contraste_vs_g_data/T_NOGSE={T_NOGSE}/{i}_NOGSE_Contraste_vs_g_t={T_NOGSE}.pdf")
-    fig1.savefig(f"../results_{file_name}/contraste_vs_g_data/T_NOGSE={T_NOGSE}/{i}_NOGSE_Contraste_vs_g_t={T_NOGSE}.png", dpi=600)
+    np.savetxt(f"../results_{file_name}/contraste_vs_g_data/T_NOGSE={T_nogse}/{i}_Datos_Contraste_vs_g_t={T_nogse}_n={n}.txt", table.T, delimiter=' ', newline='\n')
+    
+    fig1.tight_layout()
+    fig1.savefig(f"../results_{file_name}/contraste_vs_g_data/T_NOGSE={T_nogse}/{i}_NOGSE_Contraste_vs_g_t={T_nogse}_n={n}.pdf")
+    fig1.savefig(f"../results_{file_name}/contraste_vs_g_data/T_NOGSE={T_nogse}/{i}_NOGSE_Contraste_vs_g_t={T_nogse}_n={n}.png", dpi=600)
     plt.close(fig1)
     idx += 1
 
-fig.savefig(f"../results_{file_name}/contraste_vs_g_data/T_NOGSE={T_NOGSE}/NOGSE_Contraste_vs_g_t={T_NOGSE}.pdf")
-fig.savefig(f"../results_{file_name}/contraste_vs_g_data/T_NOGSE={T_NOGSE}/NOGSE_Contraste_vs_g_t={T_NOGSE}.png", dpi=600)
+fig.tight_layout()
+fig.savefig(f"../results_{file_name}/contraste_vs_g_data/T_NOGSE={T_nogse}/NOGSE_Contraste_vs_g_t={T_nogse}_n={n}.pdf")
+fig.savefig(f"../results_{file_name}/contraste_vs_g_data/T_NOGSE={T_nogse}/NOGSE_Contraste_vs_g_t={T_nogse}_n={n}.png", dpi=600)
 plt.close(fig)
