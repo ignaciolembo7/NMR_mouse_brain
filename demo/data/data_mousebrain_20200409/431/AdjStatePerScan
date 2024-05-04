@@ -1,0 +1,26 @@
+##TITLE=Parameter List, ParaVision 6.0.1
+##JCAMPDX=4.24
+##DATATYPE=Parameter Values
+##ORIGIN=Bruker BioSpin MRI GmbH
+##OWNER=nmrsu
+$$ 2020-04-19 06:56:22.485 -0300  nmrsu@czc6437k1v
+$$ /opt/data/20191125-DenuNacho-exp3/Mouse_brain_Sole_1_8_20200409_183445/431/AdjStatePerScan
+$$ process /opt/PV6.0.1/prog/mod/pipe
+##$AdjScanStateCompleted=Yes
+##$AdjScanStateAdjName=( 2, 128 )
+<SHIM_Scan> <RCVR_Standard>
+##$AdjScanStateCategory=( 2 )
+SHIM RCVR
+##$AdjScanStateTime=( 2 )
+<2020-04-19T06:56:00,742-0300> <2020-04-19T06:56:01,121-0300>
+##$AdjScanStateExpno=( 2 )
+431 431
+##$AdjScanStateState=( 2 )
+adj_successful adj_successful
+##$AdjScanStateResultId=( 2, 65 )
+<2.16.756.5.5.100.8323328.18783.1587290160.13> 
+<2.16.756.5.5.100.8323328.18783.1587290160.14>
+##$AdjScanStateMethod=( 2, 128 )
+<Bruker:AdjShim> <User:nogse_EPIlim90>
+##END=
+$$ File finished by PARX at 2020-04-19 06:56:22.485 -0300

@@ -1,4 +1,4 @@
-#NMRSI - Ignacio Lembo Ferrari - 24/10/2023
+#NMRSI - Ignacio Lembo Ferrari - 25/04/2024
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -36,7 +36,7 @@ axs[0].set_title("$A_0$", fontsize=18)
 
 axs[1].imshow(experiment, cmap="gray")
 axs[1].axis("off")
-axs[1].set_title( str(ns) + " | " + str(params["t_nogse"]) + " ms | " + str(params["ramp_grad_str"]) + " mT/m" + str(params["ramp_grad_N"]), fontsize=18) 
+axs[1].set_title( str(ns) + " | " + str(params["t_nogse"]) + " ms | " + str(params["ramp_grad_str"]) + " mT/m | " + str(params["ramp_grad_N"]), fontsize=18) 
 
 plt.show()
 plt.close(fig)
