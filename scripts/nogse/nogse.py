@@ -104,7 +104,7 @@ def nogse_params(method_path):
 
         return {"t_nogse": t_nogse, "ramp_grad_str": ramp_grad_str, "ramp_grad_N": ramp_grad_N, "ramp_grad_x": ramp_grad_x, "EchoTime": EchoTime}
 
-def upload_contrast_data(file_name):
+def upload_contrast_data(file_name, slic):
 
     def generar_rangos_discontinuos(rangos_str):
         carpetas = []
@@ -132,8 +132,8 @@ def upload_contrast_data(file_name):
             image_paths.append(image_path)
             method_paths.append(method_path)
             ims = ds(image_path).data
-            A0s.append(ims[:,:,1,0]) 
-            experiments.append(ims[:,:,1,1])
+            A0s.append(ims[:,:slic,0]) 
+            experiments.append(ims[:,:,slic,1])
         except Exception as e:
             error_carpeta = carpeta
             print(f"Error al procesar la carpeta {carpeta}: {e}")
@@ -146,7 +146,7 @@ def upload_contrast_data(file_name):
         print("No se encontraron errores en el procesamiento de las carpetas.")
         return image_paths, method_paths
 
-def generate_contrast_roi(image_paths, method_paths, mask):
+def generate_contrast_roi(image_paths, method_paths, mask, slic):
     
     experiments = []
     A0s = []
@@ -155,8 +155,8 @@ def generate_contrast_roi(image_paths, method_paths, mask):
     
     for image_path, method_path in zip(image_paths, method_paths):
         ims = ds(image_path).data
-        A0s.append(ims[:,:,1,0]) 
-        experiments.append(ims[:,:,1,1])
+        A0s.append(ims[:,:,slic,0]) 
+        experiments.append(ims[:,:,slic,1])
         param_dict = nogse_params(method_path)
         param_list = list(param_dict.values())
         params.append(param_list)
@@ -186,7 +186,7 @@ def generate_contrast_roi(image_paths, method_paths, mask):
 
     return T_nogse[0], g_contrast, n[0], f
 
-def upload_NOGSE_vs_x_data(file_name):
+def upload_NOGSE_vs_x_data(file_name, slic):
 
     def generar_rangos_discontinuos(rangos_str):
         carpetas = []
@@ -213,8 +213,8 @@ def upload_NOGSE_vs_x_data(file_name):
             image_paths.append(image_path)
             method_paths.append(method_path)
             ims = ds(image_path).data
-            A0s.append(ims[:,:,1,0]) 
-            experiments.append(ims[:,:,1,1])
+            A0s.append(ims[:,:,slic,0]) 
+            experiments.append(ims[:,:,slic,1])
         except Exception as e:
             error_carpeta = carpeta
             print(f"Error al procesar la carpeta {carpeta}: {e}")
@@ -227,7 +227,7 @@ def upload_NOGSE_vs_x_data(file_name):
         print("No se encontraron errores en el procesamiento de las carpetas.")
         return image_paths, method_paths
 
-def generate_NOGSE_vs_x_roi(image_paths, method_paths, mask):
+def generate_NOGSE_vs_x_roi(image_paths, method_paths, mask, slic):
     
     experiments = []
     A0s = []
@@ -236,8 +236,8 @@ def generate_NOGSE_vs_x_roi(image_paths, method_paths, mask):
     
     for image_path, method_path in zip(image_paths, method_paths):
         ims = ds(image_path).data
-        A0s.append(ims[:,:,1,0]) 
-        experiments.append(ims[:,:,1,1])
+        A0s.append(ims[:,:,slic,0]) 
+        experiments.append(ims[:,:,slic,1])
         param_dict = nogse_params(method_path)
         param_list = list(param_dict.values())
         params.append(param_list)
@@ -258,7 +258,7 @@ def generate_NOGSE_vs_x_roi(image_paths, method_paths, mask):
 
     return T_nogse[0], g[0], x, n[0], f
 
-def plot_contrast_data(ax, nroi, g_contrast, f, tnogse, n):
+def plot_contrast_data(ax, nroi, g_contrast, f, tnogse, n, slic):
     ax.plot(g_contrast, f, "-o", markersize=7, linewidth = 2, label=nroi)
     ax.set_xlabel("Intensidad de gradiente $g$ [mT/m]", fontsize=18)
     ax.set_ylabel("Contraste $\mathrm{NOGSE}$ $\Delta M$", fontsize=18)
@@ -266,23 +266,11 @@ def plot_contrast_data(ax, nroi, g_contrast, f, tnogse, n):
     ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
     ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
     ax.tick_params(axis='y', labelsize=16, color='black')
-    title = ax.set_title("$T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} ".format(tnogse, n), fontsize=18)
+    title = ax.set_title("$T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} || slice = {} ".format(tnogse, n, slic), fontsize=18)
     #plt.tight_layout()    
     #ax.set_xlim(0.5, 10.75)
 
-def plot_contrast_ptROI(ax, nroi, g_contrast, f, tnogse, n):
-    ax.plot(g_contrast, f, "-o", markersize=7, linewidth = 2, label=nroi)
-    ax.set_xlabel("Intensidad de gradiente $g$ [mT/m]", fontsize=18)
-    ax.set_ylabel("Contraste $\mathrm{NOGSE}$ $\Delta M$", fontsize=18)
-    ax.legend(title='ROI', title_fontsize=18, fontsize=18, loc='upper right')
-    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
-    ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
-    ax.tick_params(axis='y', labelsize=16, color='black')
-    title = ax.set_title("$T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} ".format(tnogse, n), fontsize=18)
-    #plt.tight_layout()
-    #ax.set_xlim(0.5, 10.75)
-
-def plot_nogse_vs_x_data(ax, nroi, x, f, tnogse, n):
+def plot_nogse_vs_x_data(ax, nroi, x, f, tnogse, n, slic):
     ax.plot(x, f, "-o", markersize=7, linewidth = 2, label=nroi)
     ax.set_xlabel("Tiempo de modulación $x$ [ms]", fontsize=18)
     ax.set_ylabel("Señal $\mathrm{NOGSE}$ [u.a.]", fontsize=18)
@@ -290,7 +278,7 @@ def plot_nogse_vs_x_data(ax, nroi, x, f, tnogse, n):
     ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
     ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
     ax.tick_params(axis='y', labelsize=16, color='black')
-    title = ax.set_title("$T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} ".format(tnogse, n), fontsize=18)
+    title = ax.set_title("$T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} || slice = {} ".format(tnogse, n, slic), fontsize=18)
     #plt.tight_layout()
     #ax.set_xlim(0.5, 10.75)
 

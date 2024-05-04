@@ -1,0 +1,13 @@
+##TITLE=Parameter List, ParaVision 6.0.1
+##JCAMPDX=4.24
+##DATATYPE=Parameter Values
+##ORIGIN=Bruker BioSpin MRI GmbH
+##OWNER=nmrsu
+$$ 2020-04-19 04:38:17.645 -0300  nmrsu@czc6437k1v
+$$ /opt/data/20191125-DenuNacho-exp3/Mouse_brain_Sole_1_8_20200409_183445/426/pdata/1/procs
+$$ process /opt/PV6.0.1/prog/bin/parxserver
+##$OFFSET=624.764634625838
+##$SF=400.150690587218
+##$YMAX_p=716
+##$YMIN_p=5
+##END=
