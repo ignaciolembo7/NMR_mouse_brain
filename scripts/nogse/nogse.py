@@ -282,6 +282,41 @@ def plot_nogse_vs_x_data(ax, nroi, x, f, tnogse, n, slic):
     #plt.tight_layout()
     #ax.set_xlim(0.5, 10.75)
 
+def plot_nogse_vs_x_data_ptG(ax, nroi, x, f, tnogse, g, n, slic,color):
+    ax.plot(x, f, "-o", markersize=7, linewidth = 2, color = color, label=g)
+    ax.set_xlabel("Tiempo de modulación $x$ [ms]", fontsize=27)
+    ax.set_ylabel("Señal $\mathrm{NOGSE}$ normalizada", fontsize=27)
+    ax.legend(title='$G$ [mT/m]', title_fontsize=12, fontsize=12, loc='best')
+    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
+    ax.tick_params(axis='x',rotation=0, labelsize=18, color='black')
+    ax.tick_params(axis='y', labelsize=18, color='black')
+    title = ax.set_title("{} || $T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} || Slice = {}".format(nroi, tnogse, n, slic), fontsize=18)
+    #ax.set_xlim(0.5, 10.75)
+
+def plot_nogse_vs_x_data_ptN(ax, nroi, x, f, tnogse, g, n, slic,color):
+    ax.plot(x, f, "-o", markersize=7, linewidth = 2, color = color, label=n)
+    ax.set_xlabel("Tiempo de modulación $x$ [ms]", fontsize=27)
+    ax.set_ylabel("Señal $\mathrm{NOGSE}$ normalizada", fontsize=27)
+    ax.legend(title='$N$', title_fontsize=12, fontsize=12, loc='best')
+    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
+    ax.tick_params(axis='x',rotation=0, labelsize=18, color='black')
+    ax.tick_params(axis='y', labelsize=18, color='black')
+    title = ax.set_title("{} || $T_\mathrm{{NOGSE}}$ = {} ms  ||  $G$ = {} || Slice = {}".format(nroi, tnogse, g, slic), fontsize=18)
+    #ax.set_xlim(0.5, 10.75)
+
+
+def plot_nogse_vs_x_data_ptTNOGSE(ax, nroi, x, f, tnogse, n, color, slic):
+    ax.plot(x, f, "-o", markersize=7, linewidth = 2, color = color, label=tnogse)
+    ax.set_xlabel("Tiempo de modulación $x$ [ms]", fontsize=27)
+    ax.set_ylabel("Señal $\mathrm{NOGSE}$ normalizada", fontsize=27)
+    ax.legend(title='$T_\mathrm{{NOGSE}}$ [ms]', title_fontsize=18, fontsize=18, loc='best')
+    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
+    ax.tick_params(axis='x',rotation=0, labelsize=18, color='black')
+    ax.tick_params(axis='y', labelsize=18, color='black')
+    title = ax.set_title("{} || $T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} || Slice = {}".format(nroi, tnogse, n, slic), fontsize=18)
+    #ax.set_xlim(0.5, 10.75)
+
+
 
 ##########################################################################################
 
@@ -368,16 +403,6 @@ def plot_contrast_ptTNOGSE(ax, nroi, g_contrast, f, tnogse):
     #title = ax.set_title("{} || $T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} ".format(nroi, tnogse, n), fontsize=18)
     ax.set_xlim(-10, 1200)
 
-def plot_nogse_vs_x_data_ptTNOGSE(ax, nroi, x, f, tnogse, n, color):
-    ax.plot(x, f, "-o", markersize=7, linewidth = 2, color = color, label=tnogse)
-    ax.set_xlabel("Tiempo de modulación $x$ [ms]", fontsize=27)
-    ax.set_ylabel("Señal $\mathrm{NOGSE}$ normalizada", fontsize=27)
-    ax.legend(title='$T_\mathrm{{NOGSE}}$ [ms]', title_fontsize=18, fontsize=18, loc='best')
-    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
-    ax.tick_params(axis='x',rotation=0, labelsize=18, color='black')
-    ax.tick_params(axis='y', labelsize=18, color='black')
-    #title = ax.set_title("{} || $T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} ".format(nroi, tnogse, n), fontsize=18)
-    #ax.set_xlim(0.5, 10.75)
 
 def plot_nogse_vs_x_fit_ptTNOGSE(ax, nroi, x, f, tnogse, n, color):
     ax.plot(x, f, linewidth = 2, color = color, label = tnogse)

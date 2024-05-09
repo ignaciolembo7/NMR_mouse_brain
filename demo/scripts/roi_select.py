@@ -5,7 +5,6 @@ import numpy as np
 import argparse
 from brukerapi.dataset import Dataset as ds
 import matplotlib.pyplot as plt
-import sys
 
 # Mouse callback function
 def draw(event, former_x, former_y, flags, param):
@@ -35,11 +34,10 @@ def draw(event, former_x, former_y, flags, param):
 
     return former_x, former_y
 
-serial = int(sys.argv[1])
-nrois = int(sys.argv[2])
-slic = int(sys.argv[3])
-
-ims = ds(f"data/data_mousebrain_20200409/"+str(serial)+"/pdata/1/2dseq").data
+serial = input("Serial:") #ms
+nrois = 5 #input("Nrois:") #ms
+slic = 1
+ims = ds(f"C:/Users/Ignacio Lembo/Documents/Repositorios/data/data_mousebrain_20200409/"+str(serial)+"/pdata/1/2dseq").data
 A0_matrix = ims[:,:,slic,0]
 M_matrix = ims[:,:,slic,1]
 original = M_matrix #/A0_matrix 
@@ -59,7 +57,7 @@ for i in range(nrois):
     mode = True  # If True, draw rectangle. Press 'm' to toggle to curve
 
     # Escalar la imagen para que se vea más grande
-    scaling_factor = 4 # Factor de escala (puedes ajustarlo según sea necesario)
+    scaling_factor = 8 # Factor de escala (puedes ajustarlo según sea necesario)
     im_scaled = cv2.resize(im, None, fx=scaling_factor, fy=scaling_factor)
     mask = np.zeros_like(im_scaled)  # Create a black image with the same size as im
     
@@ -123,5 +121,4 @@ indices_blancos = np.where((imagen_final >= 250) & (imagen_final <= 255))
 imagen_color[indices_blancos] = color_rojo
 
 # Guardar la imagen final
-cv2.imwrite(f"rois/im={serial}_rois_final_color.jpg", imagen_color)
-
+cv2.imwrite(f"../images/im={serial}_rois_final_color.jpg", imagen_color)
