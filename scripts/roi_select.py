@@ -37,7 +37,7 @@ def draw(event, former_x, former_y, flags, param):
 serial = input("Serial:") #ms
 nrois = 5 #input("Nrois:") #ms
 slic = 1
-ims = ds(f"C:/Users/Ignacio Lembo/Documents/Repositorios/data/data_mousebrain_20200409/"+str(serial)+"/pdata/1/2dseq").data
+ims = ds(f"C:/Users/Ignacio Lembo/Documents/data/data_mousebrain_20200409/"+str(serial)+"/pdata/1/2dseq").data
 A0_matrix = ims[:,:,slic,0]
 M_matrix = ims[:,:,slic,1]
 original = M_matrix #/A0_matrix 

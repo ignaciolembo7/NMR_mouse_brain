@@ -7,9 +7,10 @@ from lmfit import Minimizer, create_params, fit_report
 import glob 
 from brukerapi.dataset import Dataset as ds
 import seaborn as sns
+import os
 import cv2
 
-sns.set(context='paper')
+sns.set_theme(context='paper')
 sns.set_style("whitegrid")
 
 def nogse_image_params(method_path):
@@ -51,7 +52,57 @@ def nogse_image_params(method_path):
 
         start_idx = txt.find("DwUsedSliceThick")
         end_idx = txt.find("##", start_idx)
-        DwUsedSliceThick = float(txt[start_idx + len("DwUsedSliceThick="):end_idx])
+        DwUsedSliceThick = float(txt[start_idx + len("DwUsedSliceThick="):end_idx]) 
+
+        PVM_Fov = []
+        with open(method_path, 'r') as archivo:
+        # Establece una bandera para identificar cuándo debes leer los valores
+            leyendo_valores = False
+
+            # Lee el archivo línea por línea
+            for linea in archivo:
+                # Busca la línea que contiene "Matrix"
+                if "PVM_Fov=" in linea:
+                    # Activa la bandera para comenzar a leer los valores
+                    leyendo_valores = True
+                elif leyendo_valores:
+                    # Extrae los valores de la línea (elimina espacios en blanco)
+                    valores_str = linea.strip().split()
+                    
+                    # Verifica si la línea contiene solo números flotantes
+                    if all(valor.replace(".", "", 1).isdigit() or (valor[0] == '-' and valor[1:].replace(".", "", 1).isdigit()) for valor in valores_str):
+                        # Convierte los valores a números flotantes y agrégalos al vector
+                        PVM_Fov.extend([float(valor) for valor in valores_str])
+                    else:
+                        # Si la línea no contiene números flotantes, detén la lectura
+                        break
+
+        PVM_Fov = str(PVM_Fov[0]) + " mm" + " x " + str(PVM_Fov[1]) + " mm"
+
+        PVM_SpatResol = []
+        with open(method_path, 'r') as archivo:
+        # Establece una bandera para identificar cuándo debes leer los valores
+            leyendo_valores = False
+
+            # Lee el archivo línea por línea
+            for linea in archivo:
+                # Busca la línea que contiene "Matrix"
+                if "PVM_SpatResol" in linea:
+                    # Activa la bandera para comenzar a leer los valores
+                    leyendo_valores = True
+                elif leyendo_valores:
+                    # Extrae los valores de la línea (elimina espacios en blanco)
+                    valores_str = linea.strip().split()
+                    
+                    # Verifica si la línea contiene solo números flotantes
+                    if all(valor.replace(".", "", 1).isdigit() or (valor[0] == '-' and valor[1:].replace(".", "", 1).isdigit()) for valor in valores_str):
+                        # Convierte los valores a números flotantes y agrégalos al vector
+                        PVM_SpatResol.extend([float(valor) for valor in valores_str])
+                    else:
+                        # Si la línea no contiene números flotantes, detén la lectura
+                        break
+
+        PVM_SpatResol = str(PVM_SpatResol[0]*1000) + " um" + " x " + str(PVM_SpatResol[1]*1000) + " um"
 
         PVM_Matrix = []
         with open(method_path, 'r') as archivo:
@@ -76,7 +127,7 @@ def nogse_image_params(method_path):
                         # Si la línea no contiene números flotantes, detén la lectura
                         break
 
-    return {"Nsegments": Nsegments, "NAverages": NAverages, "NRepetitions": NRepetitions, "DummyScans": DummyScans, "DummyScansDur": DummyScansDur, "ScanTime": ScanTime, "DwUsedSliceThick": DwUsedSliceThick, "Img size": PVM_Matrix, "EffSWh": EffSWh}
+    return {"Nsegments": Nsegments, "NAverages": NAverages, "NRepetitions": NRepetitions, "DummyScans": DummyScans, "DummyScansDur": DummyScansDur, "ScanTime": ScanTime, "EffSWh": EffSWh, "DwUsedSliceThick": DwUsedSliceThick, "Img size": PVM_Matrix,  "PVM_Fov": PVM_Fov, "PVM_SpatResol": PVM_SpatResol}
 
 def nogse_params(method_path):
     with open(method_path) as file:
@@ -104,7 +155,7 @@ def nogse_params(method_path):
 
         return {"t_nogse": t_nogse, "ramp_grad_str": ramp_grad_str, "ramp_grad_N": ramp_grad_N, "ramp_grad_x": ramp_grad_x, "EchoTime": EchoTime}
 
-def upload_contrast_data(file_name, slic):
+def upload_contrast_data(data_directory, slic):
 
     def generar_rangos_discontinuos(rangos_str):
         carpetas = []
@@ -127,8 +178,8 @@ def upload_contrast_data(file_name, slic):
 
     for carpeta in carpetas_e_hahn + carpetas_e_cpmg:
         try:
-            image_path = glob.glob("C:/Users/Ignacio Lembo/Documents/Repositorios/data/data_" + file_name + "/{}/pdata/1/2dseq".format(carpeta))[0] 
-            method_path = glob.glob("C:/Users/Ignacio Lembo/Documents/Repositorios/data/data_" + file_name + "/{}/method".format(carpeta))[0]
+            image_path = glob.glob(f"{data_directory}/{carpeta}/pdata/1/2dseq")[0]
+            method_path = glob.glob(f"{data_directory}/{carpeta}/method")[0]
             image_paths.append(image_path)
             method_paths.append(method_path)
             ims = ds(image_path).data
@@ -186,7 +237,7 @@ def generate_contrast_roi(image_paths, method_paths, mask, slic):
 
     return T_nogse[0], g_contrast, n[0], f
 
-def upload_NOGSE_vs_x_data(file_name, slic):
+def upload_NOGSE_vs_x_data(data_directory, slic):
 
     def generar_rangos_discontinuos(rangos_str):
         carpetas = []
@@ -205,11 +256,11 @@ def upload_NOGSE_vs_x_data(file_name, slic):
     params = []
 
     error_carpeta = None  # Variable para almacenar el número de carpeta donde ocurre el error
-
+    
     for carpeta in carpetas:
         try:
-            image_path = glob.glob("C:/Users/Ignacio Lembo/Documents/Repositorios/data/data_" + file_name + "/{}/pdata/1/2dseq".format(carpeta))[0] 
-            method_path = glob.glob("C:/Users/Ignacio Lembo/Documents/Repositorios/data/data_" + file_name + "/{}/method".format(carpeta))[0]
+            image_path = glob.glob(f"{data_directory}/{carpeta}/pdata/1/2dseq")[0]
+            method_path = glob.glob(f"{data_directory}/{carpeta}/method")[0]
             image_paths.append(image_path)
             method_paths.append(method_path)
             ims = ds(image_path).data
@@ -303,7 +354,6 @@ def plot_nogse_vs_x_data_ptN(ax, nroi, x, f, tnogse, g, n, slic,color):
     ax.tick_params(axis='y', labelsize=18, color='black')
     title = ax.set_title("{} || $T_\mathrm{{NOGSE}}$ = {} ms  ||  $G$ = {} || Slice = {}".format(nroi, tnogse, g, slic), fontsize=18)
     #ax.set_xlim(0.5, 10.75)
-
 
 def plot_nogse_vs_x_data_ptTNOGSE(ax, nroi, x, f, tnogse, n, color, slic):
     ax.plot(x, f, "-o", markersize=7, linewidth = 2, color = color, label=tnogse)

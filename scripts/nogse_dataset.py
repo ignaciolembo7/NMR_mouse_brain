@@ -8,25 +8,25 @@ from nogse import nogse
 #Numero de serie del experimento
 ns = input('Numero de serie: ') 
 file_name = "mousebrain_20200409" #resultados
-im_path = f"C:/Users/Ignacio Lembo/Documents/Repositorios/data/data_{file_name}/"+str(ns)+"/pdata/1/2dseq" # dirección donde guardo la carpeta del experimento.
+im_path = f"C:/Users/Ignacio Lembo/Documents/data/data_{file_name}/"+str(ns)+"/pdata/1/2dseq" # dirección donde guardo la carpeta del experimento.
 slic = 1 # slice que quiero ver 0 o 1 
 
 images = ds(im_path).data
 
-print("Dimensión del array: {}".format(images.shape))
+print("\nDimensión del array: {}".format(images.shape))
 
 
 A0 = images[:,:,slic,0] # asi se accede a los elementos de un array de numpy, los ":" dicen que quiero quedarme con todas los numeros en esa dimensión, mientras que selecciono si quiero la A0 o el experimento poniendo 1 o 0 en la ultima dimensión.
 experiment = images[:,:,slic,1]
 
-method_path = f"C:/Users/Ignacio Lembo/Documents/Repositorios/data/data_{file_name}/"+str(ns)+"/method"
+method_path = f"C:/Users/Ignacio Lembo/Documents/data/data_{file_name}/"+str(ns)+"/method"
 
 params = nogse.nogse_params(method_path)
 params_img = nogse.nogse_image_params(method_path)
 
-print("Diccionario con los parámetros de la secuencia NOGSE: \n params = {}".format(params))
+print(f"\nDiccionario con los parámetros de la secuencia NOGSE: \n params = {params}")
 
-print("Diccionario con los parámetros de las imágenes: \n params_img = {}".format(params_img))
+print(f"\nDiccionario con los parámetros de las imágenes: \n params_img = {params_img}")
 
 fig, axs = plt.subplots(1, 2, figsize=(8,4)) # ploteo las imagenes
 
