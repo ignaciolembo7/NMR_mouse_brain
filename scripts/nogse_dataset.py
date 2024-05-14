@@ -3,13 +3,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from brukerapi.dataset import Dataset as ds
-from nogse import nogse
+from protocols import nogse
 
 #Numero de serie del experimento
 ns = input('Numero de serie: ') 
 file_name = "mousebrain_20200409" #resultados
 im_path = f"C:/Users/Ignacio Lembo/Documents/data/data_{file_name}/"+str(ns)+"/pdata/1/2dseq" # dirección donde guardo la carpeta del experimento.
-slic = 1 # slice que quiero ver 0 o 1 
+slic = 1 # slice que quiero ver
 
 images = ds(im_path).data
 
@@ -48,17 +48,3 @@ plt.title(f"Im {ns} | Tnogse = {params['t_nogse']} ms | G = {params['ramp_grad_s
 plt.tight_layout()
 plt.savefig(f"../images/image={ns}_t={params['t_nogse']}_G={params['ramp_grad_str']}_N={params['ramp_grad_N']}_slice={slic}.png")
 plt.close(fig)
-
-"""
-# Para acceder a los elementos podemos acceder como un diccionario por nombre o pasarlo a un array y usarlo asi
-
-T_nogse = params["t_nogse"]
-print("T_nogse = {} ms".format(T_nogse))
-param_list = list(params.values())
-g = param_list[1]
-print("g = {} mT/m".format(g))
-x = param_list[3]
-print("x = {} ms".format(x))
-EchoTime = param_list[4]
-print("EchoTime = {} ms".format(x))
-"""

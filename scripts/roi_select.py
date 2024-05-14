@@ -37,7 +37,9 @@ def draw(event, former_x, former_y, flags, param):
 serial = input("Serial:") #ms
 nrois = 5 #input("Nrois:") #ms
 slic = 1
+scaling_factor = 6 # Factor de escala (puedes ajustarlo según sea necesario)
 ims = ds(f"C:/Users/Ignacio Lembo/Documents/data/data_mousebrain_20200409/"+str(serial)+"/pdata/1/2dseq").data
+
 A0_matrix = ims[:,:,slic,0]
 M_matrix = ims[:,:,slic,1]
 original = M_matrix #/A0_matrix 
@@ -57,7 +59,6 @@ for i in range(nrois):
     mode = True  # If True, draw rectangle. Press 'm' to toggle to curve
 
     # Escalar la imagen para que se vea más grande
-    scaling_factor = 8 # Factor de escala (puedes ajustarlo según sea necesario)
     im_scaled = cv2.resize(im, None, fx=scaling_factor, fy=scaling_factor)
     mask = np.zeros_like(im_scaled)  # Create a black image with the same size as im
     

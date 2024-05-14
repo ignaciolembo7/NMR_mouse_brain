@@ -2,7 +2,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from nogse import pgse
+from protocols import pgse
 import os
 import seaborn as sns
 sns.set_theme(context='paper')
@@ -21,29 +21,30 @@ image_paths, method_paths = pgse.upload_pgse_vs_bval_data(data_directory, slic)
 
 idx = 0
 fig, ax = plt.subplots(figsize=(8,6)) #Imagen de todas las ROIS juntas
+rois = ["ROI1","ROI2","ROI3","ROI4","ROI5"]
 
-for i in ["ROI1","ROI2","ROI3","ROI4","ROI5"]: 
+for roi in rois: 
 
     mask = np.loadtxt(f"rois/mask_"+ str(idx+1) +".txt")
 
     fig1, ax1 = plt.subplots(figsize=(8,6)) #Imagen de cada ROI
     
-    DwBvalEach, DwEffBval, DwGradAmp, DwGradRead, DwGradDur, DwGradSep, f =  pgse.generate_pgse_vs_bval_roi(image_paths, method_paths, mask, slic)
+    DwBvalEach, DwEffBval, DwGradAmp, DwGradRead, DwGradPhase, DwGradSlice, DwGradDur, DwGradSep, f =  pgse.generate_pgse_vs_bval_roi(image_paths, method_paths, mask, slic)
 
-    G = round(DwGradRead*max_field,2)
+    G = round(DwGradAmp[0]*max_field/100,2)
 
     directory = f"../results_{file_name}/pgse_vs_bvalue_data/G={G}"
     os.makedirs(directory, exist_ok=True)
 
-    pgse.plot_nogse_vs_x_data(ax, i, DwEffBval, f, DwGradDur, DwGradSep, DwGradRead, slic)
-    pgse.plot_nogse_vs_x_data(ax1, i, DwEffBval, f, DwGradDur, DwGradSep, DwGradRead, slic)
+    pgse.plot_pgse_vs_bval_data(ax, roi, DwEffBval, f, DwGradDur, DwGradSep, DwGradRead, G, slic)
+    pgse.plot_pgse_vs_bval_data(ax1, roi, DwEffBval, f, DwGradDur, DwGradSep, DwGradRead, G, slic)
 
     table = np.vstack((DwEffBval, f))
-    np.savetxt(f"{directory}/{i}_Datos_pgse_vs_bvalue_G={G}.txt", table.T, delimiter=' ', newline='\n')
+    np.savetxt(f"{directory}/{roi}_Datos_pgse_vs_bvalue_G={G}.txt", table.T, delimiter=' ', newline='\n')
 
     fig1.tight_layout()
-    fig1.savefig(f"{directory}/{i}_pgse_vs_bvalue_G={G}.pdf")
-    fig1.savefig(f"{directory}/{i}_pgse_vs_bvalue_G={G}.png", dpi=600)
+    fig1.savefig(f"{directory}/{roi}_pgse_vs_bvalue_G={G}.pdf")
+    fig1.savefig(f"{directory}/{roi}_pgse_vs_bvalue_G={G}.png", dpi=600)
     plt.close(fig1)
     idx += 1
 
