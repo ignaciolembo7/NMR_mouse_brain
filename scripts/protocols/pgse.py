@@ -405,12 +405,27 @@ def generate_pgse_vs_bval_roi(image_paths, method_paths, mask, slic):
 
 def plot_pgse_vs_bval_data(ax, nroi, DwEffBval, f, DwGradDur, DwGradSep, DwGradAmp, G, slic):
     ax.plot(DwEffBval, f, "-o", markersize=7, linewidth = 2, label=nroi)
-    ax.set_xlabel("$b_{value}$ $\delta^2 \gamma^2 g^2 t_d$ [s/mm$^2$]", fontsize=18)
+    ax.set_xlabel("$b_{value} = \delta^2 \gamma^2 g^2 t_d$ [s/mm$^2$]", fontsize=18)
     ax.set_ylabel("Señal $\mathrm{PGSE}$ [u.a.]", fontsize=18)
     ax.legend(title='ROI', title_fontsize=18, fontsize=18, loc='best')
     ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
     ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
     ax.tick_params(axis='y', labelsize=16, color='black')
+    title = ax.set_title(f"$\Delta$ = {DwGradSep} ms  ||  $\delta$ = {DwGradDur} || slice = {slic} ", fontsize=18)
+    #title = ax.set_title(f"G = {G} mT/m  || slice = {slic} ", fontsize=18)
+    #plt.tight_layout()
+    #ax.set_xlim(0.5, 10.75)
+
+def plot_logpgse_vs_bval_data(ax, nroi, DwEffBval, f, DwGradDur, DwGradSep, DwGradAmp, G, slic):
+    ax.plot(DwEffBval, f, "-o", markersize=7, linewidth = 2, label=nroi)
+    ax.set_xlabel("$b_{value} = \delta^2 \gamma^2 g^2 t_d$ [s/mm$^2$]", fontsize=18)
+    ax.set_ylabel("Señal $\mathrm{PGSE}$ [u.a.]", fontsize=18)
+    ax.legend(title='ROI', title_fontsize=18, fontsize=18, loc='best')
+    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
+    ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
+    ax.tick_params(axis='y', labelsize=16, color='black')
+    ax.set_yscale('log')  #Escala logarítmica en el eje y
+    #ax.set_xscale('log')  #Escala logarítmica en el eje x
     title = ax.set_title(f"$\Delta$ = {DwGradSep} ms  ||  $\delta$ = {DwGradDur} || slice = {slic} ", fontsize=18)
     #title = ax.set_title(f"G = {G} mT/m  || slice = {slic} ", fontsize=18)
     #plt.tight_layout()
@@ -668,12 +683,12 @@ def generate_pgse_vs_bval_roi_allinone(image_paths, method_paths, mask, slic):
     for image_path, method_path in zip(image_paths, method_paths):
         ims = ds(image_path).data
         num_exps = ims.shape[3]
-        print(f"Number of experiments: {num_exps}")
         A0s.append(ims[:,:,slic,0]) 
         for num_exp in range(1, num_exps):
             experiments.append(ims[:,:,slic,num_exp])
  
         params = pgse_params_allinone(method_path)   
+        print(f"\n\nPGSE sequence parameters for the {len(experiments)} experiments:")
         DwBvalEach = params["DwBvalEach"]
         DwEffBval = params["DwEffBval"]
         DwGradAmp = params["DwGradAmp"]
