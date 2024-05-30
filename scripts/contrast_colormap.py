@@ -5,8 +5,6 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
 from protocols import nogse
 import os
-from brukerapi.dataset import Dataset as ds
-import cv2
 import seaborn as sns
 sns.set_theme(context='paper')
 sns.set_style("whitegrid")
@@ -41,15 +39,20 @@ for roi in rois:
 
         fig, ax = plt.subplots(figsize=(8,6))
         img = ax.imshow(im, cmap=cmap) #norm = norm
-        plt.colorbar(img, ax=ax, ticks=np.linspace(0, np.nanmax(ims), 8))
+        cbar = plt.colorbar(img, ax=ax, ticks=np.linspace(0, np.nanmax(ims), 8))
+        cbar.set_label("$\\Delta M$", fontsize=14)
         ax.axis('off')
         title = ax.set_title(f"$T_\mathrm{{NOGSE}}$ = {T_nogse} ms  ||  g = {g} mT/m || $N$ = {int(n)} || slice = {slic}", fontsize=18)
 
         directory = f"../results_{file_name}/{folder}/TNOGSE={T_nogse}_N={int(n)}"
         os.makedirs(directory, exist_ok=True)    
+
+        np.savetxt(f"{directory}/{roi}_NOGSE_contrast_colormap_t={T_nogse}_N={int(n)}_g={g}.txt", im, fmt='%f')
+
         fig.tight_layout()
         #fig.savefig(f"{directory}/{roi}_NOGSE_contrast_colormap_t={T_nogse}_N={int(n)}_g={g}.pdf")
         fig.savefig(f"{directory}/{roi}_NOGSE_contrast_colormap_t={T_nogse}_N={int(n)}_g={g}.png", dpi=600)
+        
         plt.close(fig)
 
     idx += 1
