@@ -719,3 +719,68 @@ def generate_pgse_vs_bval_roi_allinone(image_paths, method_paths, mask, slic):
         f.append(np.mean(roi[roi != 0]))
 
     return DwBvalEach, DwEffBval, DwGradAmp, DwGradRead, DwGradPhase, DwGradSlice, DwGradDur, DwGradSep, f
+
+def plot_logpgse_vs_bval_exp(ax, nroi, modelo, bval, bval_fit, f, fit, D0_fit, DwGradDur, DwGradSep, slic, color):
+    ax.plot(bval, f, "o", markersize=7, linewidth=2, color = color)
+    ax.plot(bval_fit, fit, linewidth=2, label= nroi + " - $D_0 = $" + str(round(D0_fit,6)) + " ms", color = color)
+    ax.legend(title_fontsize=15, fontsize=18, loc='best')
+    ax.set_xlabel("$b_{value} = \delta^2 \gamma^2 g^2 t_d$ [s/mm$^2$]", fontsize=18)
+    ax.set_ylabel("Señal $\mathrm{PGSE}$ [u.a.]", fontsize=18)
+    ax.set_yscale('log')
+    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
+    ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
+    ax.tick_params(axis='y', labelsize=16, color='black')
+    title = ax.set_title(f"$\Delta$ = {DwGradSep} ms  ||  $\delta$ = {DwGradDur} || slice = {slic} ", fontsize=18)
+
+def plot_pgse_vs_bval_exp(ax, nroi, modelo, bval, bval_fit, f, fit, D0_fit, DwGradDur, DwGradSep, slic, color):
+    ax.plot(bval, f, "o", markersize=7, linewidth=2, color = color)
+    ax.plot(bval_fit, fit, linewidth=2, label= nroi + " - $D_0 = $" + str(round(D0_fit,6)) + " ms", color = color)
+    ax.legend(title_fontsize=15, fontsize=18, loc='best')
+    ax.set_xlabel("$b_{value} = \delta^2 \gamma^2 g^2 t_d$ [s/mm$^2$]", fontsize=18)
+    ax.set_ylabel("Señal $\mathrm{PGSE}$ [u.a.]", fontsize=18)
+    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
+    ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
+    ax.tick_params(axis='y', labelsize=16, color='black')
+    title = ax.set_title(f"$\Delta$ = {DwGradSep} ms  ||  $\delta$ = {DwGradDur} || slice = {slic} ", fontsize=18)
+
+def plot_logpgse_vs_bval_biexp(ax, nroi, modelo, bval, bval_fit, f, fit, D1_fit, D2_fit, DwGradDur, DwGradSep, slic, color):
+    ax.plot(bval, f, "o", markersize=7, linewidth=2, color = color)
+    ax.plot(bval_fit, fit, linewidth=2, label= nroi + " - $D_1 = $" + str(round(D1_fit,6)) + " - $D_2 = $" + str(round(D2_fit,6)) + " ms", color = color)
+    ax.legend(title_fontsize=15, fontsize=18, loc='best')
+    ax.set_xlabel("$b_{value} = \delta^2 \gamma^2 g^2 t_d$ [s/mm$^2$]", fontsize=18)
+    ax.set_ylabel("Señal $\mathrm{PGSE}$ [u.a.]", fontsize=18)
+    ax.set_yscale('log')
+    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
+    ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
+    ax.tick_params(axis='y', labelsize=16, color='black')
+    title = ax.set_title(f"$\Delta$ = {DwGradSep} ms  ||  $\delta$ = {DwGradDur} || slice = {slic} ", fontsize=18)
+
+def plot_pgse_vs_bval_biexp(ax, nroi, modelo, bval, bval_fit, f, fit, D1_fit, D2_fit, DwGradDur, DwGradSep, slic, color):
+    ax.plot(bval, f, "o", markersize=7, linewidth=2, color = color)
+    ax.plot(bval_fit, fit, linewidth=2, label= nroi + " - $D_1 = $" + str(round(D1_fit,6)) + " - $ D_2 = $" + str(round(D2_fit,6)) + " ms", color = color)
+    ax.legend(title_fontsize=15, fontsize=18, loc='best')
+    ax.set_xlabel("$b_{value} = \delta^2 \gamma^2 g^2 t_d$ [s/mm$^2$]", fontsize=18)
+    ax.set_ylabel("Señal $\mathrm{PGSE}$ [u.a.]", fontsize=18)
+    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
+    ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
+    ax.tick_params(axis='y', labelsize=16, color='black')
+    title = ax.set_title(f"$\Delta$ = {DwGradSep} ms  ||  $\delta$ = {DwGradDur} || slice = {slic} ", fontsize=18)
+
+def plot_D_vs_td(ax, nroi, td, D1, D2, slic):
+    ax.plot(td, D1, "o", markersize=7, label= f"$D_1$", color = "black")
+    ax.plot(td, D2, "o", markersize=7, label= f"$D_2$", color = "red")
+    ax.legend(title_fontsize=15, fontsize=18, loc='best')
+    ax.set_xlabel(f"Tiempo de difusión $t_d$ [ms]", fontsize=18)
+    ax.set_ylabel(f"Coeficiente de difusión", fontsize=18)
+    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
+    ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
+    ax.tick_params(axis='y', labelsize=16, color='black')
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    title = ax.set_title(f"roi = {nroi} || slice = {slic} ", fontsize=18)
+
+def M_pgse_exp(bval, M0, D0):
+    return M0 * np.exp(-bval * D0)
+
+def M_pgse_biexp(bval, M1, D1, M2, D2):
+    return M1 * np.exp(-bval * D1) + M2 * np.exp(-bval * D2) 

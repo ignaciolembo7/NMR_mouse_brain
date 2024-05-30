@@ -21,7 +21,7 @@ image_paths, method_paths = pgse.upload_pgse_vs_bval_data(data_directory, slic)
 
 idx = 0
 fig, ax = plt.subplots(figsize=(8,6)) #Imagen de todas las ROIS juntas
-rois = ["ROI1","ROI2","ROI3","ROI4","ROI5"]
+rois = ["ROI1","ROI2"] #,"ROI3","ROI4","ROI5"]
 
 for roi in rois: 
 

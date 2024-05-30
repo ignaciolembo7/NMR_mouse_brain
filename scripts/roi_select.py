@@ -6,7 +6,28 @@ import argparse
 from brukerapi.dataset import Dataset as ds
 import matplotlib.pyplot as plt
 
-# Mouse callback function
+def draw_circle(event, x, y, flags, param):
+    global center, radius, drawing, mode
+
+    if event == cv2.EVENT_LBUTTONDOWN:
+        drawing = True
+        center = (x, y)
+        radius = 0  # Inicializar el radio con un valor predeterminado
+
+    elif event == cv2.EVENT_LBUTTONUP:
+        drawing = False
+        radius = int(np.sqrt((x - center[0])**2 + (y - center[1])**2))
+        cv2.circle(im_scaled, center, radius, (255), 2)
+        cv2.circle(mask, center, radius, (255), 2)
+        cv2.floodFill(mask, None, (0, 0), (255))
+
+    elif event == cv2.EVENT_MOUSEMOVE:
+        if drawing == True:
+            cv2.circle(im_scaled, center, radius, (255), 2)
+            cv2.circle(mask, center, radius, (255), 2)
+            current_former_x = x
+            current_former_y = y
+
 def draw(event, former_x, former_y, flags, param):
     global current_former_x, current_former_y, drawing, mode
 
@@ -35,7 +56,7 @@ def draw(event, former_x, former_y, flags, param):
     return former_x, former_y
 
 serial = input("Serial:") #ms
-nrois = 5 #input("Nrois:") #ms
+nrois = 1 #input("Nrois:") #ms
 slic = 1
 scaling_factor = 6 # Factor de escala (puedes ajustarlo según sea necesario)
 ims = ds(f"C:/Users/Ignacio Lembo/Documents/data/data_mousebrain_20200409/"+str(serial)+"/pdata/1/2dseq").data

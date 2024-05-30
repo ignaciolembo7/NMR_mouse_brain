@@ -11,7 +11,6 @@ sns.set_style("whitegrid")
 file_name = "mousebrain_20200409"
 folder = "nogse_vs_x_fast"
 data_directory = f"C:/Users/Ignacio Lembo/Documents/data/data_{file_name}"
-print(data_directory)
 slic = 1 # slice que quiero ver
 
 image_paths, method_paths = nogse.upload_NOGSE_vs_x_data(data_directory, slic)
