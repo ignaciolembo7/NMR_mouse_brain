@@ -55,10 +55,10 @@ def draw(event, former_x, former_y, flags, param):
 
     return former_x, former_y
 
-serial = input("Serial:") #ms
+serial = input("Serial: ") #ms
 nrois = 1 #input("Nrois:") #ms
 slic = 1
-scaling_factor = 6 # Factor de escala (puedes ajustarlo según sea necesario)
+scaling_factor = 7 # Factor de escala (puedes ajustarlo según sea necesario)
 ims = ds(f"C:/Users/Ignacio Lembo/Documents/data/data_mousebrain_20200409/"+str(serial)+"/pdata/1/2dseq").data
 
 A0_matrix = ims[:,:,slic,0]
@@ -125,10 +125,10 @@ for i in range(1, nrois+1):
     imagen_final = cv2.add(imagen_final, mask_roi)
 
 # Guardar la imagen final
-cv2.imwrite(f"rois/im={serial}_rois_final.jpg", imagen_final)
+cv2.imwrite(f"rois/rois_final.jpg", imagen_final)
 
 # Cargar la imagen en escala de grises
-imagen_final = cv2.imread(f"rois/im={serial}_rois_final.jpg", cv2.IMREAD_GRAYSCALE)
+imagen_final = cv2.imread(f"rois/rois_final.jpg", cv2.IMREAD_GRAYSCALE)
 
 # Convertir la imagen en escala de grises a color
 imagen_color = cv2.cvtColor(imagen_final, cv2.COLOR_GRAY2BGR)
@@ -143,4 +143,4 @@ indices_blancos = np.where((imagen_final >= 250) & (imagen_final <= 255))
 imagen_color[indices_blancos] = color_rojo
 
 # Guardar la imagen final
-cv2.imwrite(f"../images/im={serial}_rois_final_color.jpg", imagen_color)
+cv2.imwrite(f"../images/rois_final_color.jpg", imagen_color)
