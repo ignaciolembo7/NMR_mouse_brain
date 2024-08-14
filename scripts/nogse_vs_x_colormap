@@ -43,13 +43,13 @@ for roi in rois:
         ax.axis('off')
         title = ax.set_title(f"$T_\\mathrm{{NOGSE}}$ = {T_nogse} ms || $g$ = {int(g)} mT/m || $N$ = {int(n)} || slice = {slic}", fontsize=18)
 
-        directory = f"../results_{file_name}/{folder}/TNOGSE={T_nogse}_N={int(n)}_g={g}"
+        directory = f"../results_{file_name}/{folder}/tnogse={T_nogse}_N={int(n)}_g={g}"
         os.makedirs(directory, exist_ok=True)
 
-        np.savetxt(f"{directory}/{roi}_nogse_vs_x_colormap_t={T_nogse}_N={int(n)}_g={g}_x={x}.txt", im, fmt='%f')
+        np.savetxt(f"{directory}/{roi}_nogse_vs_x_colormap_tnogse={T_nogse}_N={int(n)}_g={g}_x={x}.txt", im, fmt='%f')
 
         fig.tight_layout()
-        fig.savefig(f"{directory}/{roi}_nogse_vs_x_colormap_t={T_nogse}_N={int(n)}_g={g}_x={x}.png", dpi=600)
+        fig.savefig(f"{directory}/{roi}_nogse_vs_x_colormap_tnogse={T_nogse}_N={int(n)}_g={g}_x={x}.png", dpi=600)
 
         titles.append(title.get_text())
         plt.close(fig)

@@ -7,7 +7,6 @@ import os
 import seaborn as sns
 sns.set_theme(context='paper')
 sns.set_style("whitegrid")
-from tqdm import tqdm
 from lmfit import Minimizer, create_params, fit_report
 
 file_name = "mousebrain_20200409"
@@ -21,7 +20,7 @@ slic = 1 # slice que quiero ver
 modelo = "restdist_brute"  # nombre carpeta modelo libre/rest/tort
 
 D0_ext = 2.3e-12 # extra
-D0_int = 0.7e-12 # intra
+D0_int = 0.5e-12 # intra
 D0=D0_int
 
 fig, ax = plt.subplots(figsize=(8,6)) 
@@ -53,9 +52,9 @@ for roi, color in zip(rois,palette):
     # Separar los vectores nuevamente
     g, f = zip(*vectores_ordenados)
 
-    params = create_params(l_c_mode=dict(value=0.4, min=0.05, max=1.2, brute_step=0.05, vary=True),
-                           sigma=dict(value=1.1, min=0.80, max=2.0, brute_step=0.1, vary=False),
-                           M0=dict(value=16.0, min=18.0, max=25.0, brute_step=0.25, vary=True),
+    params = create_params(l_c_mode=dict(value=0.4, min=0.1, max=1.8, brute_step=0.1, vary=True),
+                           sigma=dict(value=1.3, min=0.4, max=1.8, brute_step=0.1, vary=False),
+                           M0=dict(value=15.0, min=10.0, max=30.0, brute_step=0.25, vary=True),
                            )
 
     fitter = Minimizer(fcn2min, params, fcn_args=(g, f))
@@ -87,8 +86,8 @@ for roi, color in zip(rois,palette):
     fig1, ax1 = plt.subplots(figsize=(8,6)) 
     fig2, ax2 = plt.subplots(figsize=(8,6)) 
 
-    nogse.plot_contrast_vs_g_restdist(ax, roi, modelo, g, g_fit, f, fit, tnogse, n, slic, color)
-    nogse.plot_contrast_vs_g_restdist(ax1, roi, modelo, g, g_fit, f, fit, tnogse, n, slic, color)
+    nogse.plot_contrast_vs_g(ax, roi, modelo, g, g_fit, f, fit, tnogse, n, slic, color)
+    nogse.plot_contrast_vs_g(ax1, roi, modelo, g, g_fit, f, fit, tnogse, n, slic, color)
 
     table = np.vstack((g_fit, fit))
     np.savetxt(f"{directory}/{roi}_adjust_contrast_vs_g_tnogse={tnogse}_N={int(n)}.txt", table.T, delimiter=' ', newline='\n')

@@ -22,12 +22,12 @@ modelo = "restdist"  # nombre carpeta modelo libre/rest/tort
 D0_ext = 2.3e-12 # extra
 D0_int = 0.7e-12 # intra
 
-D0=D0_int
+D0=D0_ext
 
 fig, ax = plt.subplots(figsize=(8,6)) 
 fig3, ax3 = plt.subplots(figsize=(8,6)) 
 
-rois = ["ROI1"] #,"ROI1"]
+rois = ["ROI1","ROI2"] #,"ROI1"]
 palette = sns.color_palette("tab20", len(rois)) # Generar una paleta de colores única (ej: husl, Set3, tab10, tab20)
 
 
@@ -50,9 +50,9 @@ for roi, color in tqdm(zip(rois,palette)):
 
     #modelo M_nogse_rest_dist
     model = lmfit.Model(nogse.M_nogse_rest_dist, independent_vars=["TE", "G", "N", "x", "D0"], param_names=["l_c_mode", "sigma", "M0"])
-    model.set_param_hint("M0", value=1)
-    model.set_param_hint("l_c_mode", value=1.5, min = 0.1, max = 60)
-    model.set_param_hint("sigma", value=0.1, min = 0.01, max=0.4)
+    model.set_param_hint("M0", value=100, max=1000)
+    model.set_param_hint("l_c_mode", value=4.5, min = 0.1, max = 15)
+    model.set_param_hint("sigma", value=0.5, min = 0.1, max=1.5)
     params = model.make_params()
     #params["M0"].vary = False # fijo M0 en 1, los datos estan normalizados y no quiero que varíe
     params["l_c_mode"].vary = 1
@@ -73,7 +73,7 @@ for roi, color in tqdm(zip(rois,palette)):
     l_c_median = l_c_fit*np.exp(sigma_fit**2)
     l_c_mid = l_c_median*np.exp((sigma_fit**2)/2)
 
-    with open(f"{directory}/parameters_tnogse={tnogse}_g={g}_N={int(n)}.txt", "a") as a:
+    with open(f"{directory}/{roi}_parameters_tnogse={tnogse}_g={g}_N={int(n)}.txt", "a") as a:
         print(roi,  " - M0 = ", M0_fit, "+-", error_M0, file=a)
         print("    ",  " - l_c_mode = ", l_c_fit, "+-", error_l_c, file=a)
         print("    ",  " - l_c_median = ", l_c_median, "+-", file=a)
@@ -105,6 +105,9 @@ for roi, color in tqdm(zip(rois,palette)):
     fig2.savefig(f"{directory}/{roi}_dist_vs_lc_tnogse={tnogse}_g={g}_N={int(n)}.pdf")
     fig2.savefig(f"{directory}/{roi}_dist_vs_lc_tnogse={tnogse}_g={g}_N={int(n)}.png", dpi=600)
     plt.close(fig2)
+
+    with open(f"../results_{file_name}/{folder}/slice={slic}/{roi}_parameters_vs_tnogse_G1.txt", "a") as a:
+        print(tnogse,g,l_c_fit,error_l_c,sigma_fit, error_sigma,M0_fit,error_M0, file=a)
 
 fig.tight_layout()
 fig.savefig(f"{directory}/nogse_vs_x_tnogse={tnogse}_g={g}_N={int(n)}.pdf")

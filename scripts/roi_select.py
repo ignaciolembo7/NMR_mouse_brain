@@ -58,7 +58,7 @@ def draw(event, former_x, former_y, flags, param):
 serial = input("Serial: ") #ms
 nrois = 1 #input("Nrois:") #ms
 slic = 1
-scaling_factor = 7 # Factor de escala (puedes ajustarlo según sea necesario)
+scaling_factor = 5 # Factor de escala (puedes ajustarlo según sea necesario)
 ims = ds(f"C:/Users/Ignacio Lembo/Documents/data/data_mousebrain_20200409/"+str(serial)+"/pdata/1/2dseq").data
 
 A0_matrix = ims[:,:,slic,0]
@@ -114,6 +114,10 @@ for i in range(nrois):
     # Save mask
     np.savetxt(f"rois/mask_{i+1}.txt", mask_resized, fmt='%f')
     cv2.imwrite(f"rois/mask_{i+1}.jpg", mask_resized)
+
+    print("original size: ", original.shape)
+    print("mask size: ", mask_resized.shape)
+    print("roi size: ", roi.shape)
 
 cv2.destroyAllWindows()
 

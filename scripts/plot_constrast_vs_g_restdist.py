@@ -13,18 +13,14 @@ sns.set_style("whitegrid")
 tnogse = float(input('T_NOGSE [ms]: ')) #ms
 n = float(input('N: '))
 file_name = "mousebrain_20200409"
-folder = "contrast_vs_g_restdist_mode"
+folder = "contrast_vs_g_intrarest_extrarestdist_mode"
 slic = 1 # slice que quiero ver
-modelo = "restdist"  # nombre carpeta modelo libre/rest/tort
-D0_ext = 2.3e-12 # extra
-D0_int = 0.7e-12 # intra
-
-D0=D0_int
+modelo = "intrarest_extrarestdist_mode"  # nombre carpeta modelo libre/rest/tort
 
 fig, ax = plt.subplots(figsize=(8,6)) 
 fig1, ax1 = plt.subplots(figsize=(8,6)) 
 rois = ["ROI1", "ROI1", "ROI1", "ROI1", "ROI1", "ROI1", "ROI1", "ROI1", "ROI1", "ROI1"]
-ids = [1,2,3,9,10,12,13] #,4,5,6,7,8,9,10]
+ids = [1,3] #,3,9,10,12,13] #,4,5,6,7,8,9,10]
 regions = ["Splenium - 1", "Isthmus - 3"] #, "Isthmus - 3", "Isthmus - 9", "Splenium - 10",  "Isthmus - 12", "Isthmus - 13"] #, "Splenium4", "Splenium5", "Isthmus6", "Isthmus7", "Isthmus8", "Isthmus9", "Isthmus10"]
 palette = sns.color_palette("tab10", len(ids)) # Generar una paleta de colores única (ej: husl, Set3, tab10, tab20)
 
@@ -35,8 +31,8 @@ os.makedirs(directory, exist_ok=True)
 for color, id, region, roi in zip(palette,ids,regions, rois):
 
     data = np.loadtxt(f"../results_{file_name}/contrast_vs_g_data/slice={slic}/tnogse={tnogse}_N={int(n)}_id={id}/{roi}_data_contrast_vs_g_tnogse={tnogse}_N={int(n)}.txt")
-    data_fit = np.loadtxt(f"../results_{file_name}/contrast_vs_g_restdist_mode/tnogse={tnogse}_N={int(n)}_id={id}/{roi}_adjust_contrast_vs_g_tnogse={tnogse}_N={int(n)}.txt")
-    data_dist = np.loadtxt(f"../results_{file_name}/contrast_vs_g_restdist_mode/tnogse={tnogse}_N={int(n)}_id={id}/{roi}_dist_vs_lc_tnogse={tnogse}_N={int(n)}.txt")
+    data_fit = np.loadtxt(f"../results_{file_name}/{folder}/tnogse={tnogse}_N={int(n)}_id={id}/{roi}_adjust_contrast_vs_g_tnogse={tnogse}_N={int(n)}.txt")
+    data_dist = np.loadtxt(f"../results_{file_name}/{folder}/tnogse={tnogse}_N={int(n)}_id={id}/{roi}_dist_vs_lc_tnogse={tnogse}_N={int(n)}.txt")
 
     g = data[:, 0]
     f = data[:, 1]
@@ -45,7 +41,7 @@ for color, id, region, roi in zip(palette,ids,regions, rois):
     l_c = data_dist[:, 0]
     dist = data_dist[:, 1]
 
-    nogse.plot_contrast_vs_g_restdist(ax, region , modelo, g, g_fit, f, fit, tnogse, n, slic, color)
+    nogse.plot_contrast_vs_g(ax, region , modelo, g, g_fit, f, fit, tnogse, n, slic, color)
 
     ax1.plot(l_c, dist, "-", color=color, linewidth = 2, label = region)
     ax1.set_xlabel("Longitud de correlación $l_c$ [$\mu$m]", fontsize=27)

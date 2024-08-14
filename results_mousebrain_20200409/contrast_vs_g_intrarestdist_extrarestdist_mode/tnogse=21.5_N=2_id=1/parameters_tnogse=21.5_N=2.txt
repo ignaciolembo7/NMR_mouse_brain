@@ -1,0 +1,12 @@
+ROI1  - M0_int =  12.000000013601857 +- None
+      - l_c_mode_int =  0.8 +- None
+      - l_c_median_int =  0.8000008000004 +-
+      - l_c_mid_int =  0.8000012000009 +-
+      - sigma_int =  0.001 +- None
+      - D0_int =  2.299999985987462e-12 +- None
+      - M0_ext =  29.999999991043136 +- None
+      - l_c_mode_ext =  1.3882730292991639 +- None
+      - l_c_median_ext =  1.6720764755858524 +-
+      - l_c_mid_ext =  1.8350451829066392 +-
+      - sigma_ext =  0.43128378461874506 +- None
+      - D0_ext =  1.2256355213837692e-12 +- None

@@ -24,7 +24,10 @@ slic = 1
 nrois = 1 # input("Nrois:") # ms
 scaling_factor = 7 # Factor de escala (puedes ajustarlo según sea necesario)
 
-gs = [125.0, 150.0, 175.0, 200.0, 225.0, 250.0, 275.0, 300.0, 325.0, 350.0, 375.0, 400.0, 425.0, 450.0, 475.0, 500.0, 525.0, 550.0, 575.0, 600.0, 650.0, 725.0, 800.0]
+#gs = [125.0, 150.0, 175.0, 200.0, 225.0, 250.0, 275.0, 300.0, 325.0, 350.0, 375.0, 400.0, 425.0, 450.0, 475.0, 500.0, 525.0, 550.0, 575.0, 600.0, 650.0, 725.0, 800.0]
+
+gs = [50.0, 125.0, 200.0, 275.0, 350.0, 425.0, 500.0, 575.0, 650.0, 725.0, 800.0, 875.0, 950.0, 1025.0, 1100.0, 1175.0, 1250.0]
+
 
 #xs = [0.5, 2.7421875, 4.0234375,6.90625, 8.1875, 9.7890625, 10.75 ]
 
@@ -33,7 +36,7 @@ ids = [1,3]
 for g in gs: 
  
 
-    im = np.loadtxt(f"../results_mousebrain_20200409/contrast_vs_g_colormap/tnogse={tnogse}_N={n}/{ROI}_NOGSE_contrast_colormap_t={tnogse}_N={n}_g={g}.txt")
+    im = np.loadtxt(f"../results_mousebrain_20200409/contrast_vs_g_colormap/tnogse={tnogse}_N={n}/{ROI}_colormap_contrast_vs_g_tnogse={tnogse}_N={n}_g={g}.txt")
     #im = np.loadtxt(f"../results_mousebrain_20200409/nogse_vs_x_colormap/TNOGSE={tnogse}_N={n}_g={g}/{ROI}_nogse_vs_x_colormap_tnogse={tnogse}_N={n}_G={g}_x={x}.txt")
 
     norm = Normalize(vmin=np.nanmin(im), vmax=np.nanmax(im))
@@ -50,7 +53,7 @@ for g in gs:
         mask_contour = cv2.imread(f"{rois_folder}/id={id}_mask_contour_1.jpg")
         imagen_final_contour = cv2.add(imagen_final_contour, mask_contour)
 
-    directory = f"../results_{file_name}/images/{rois_folder}"
+    directory = f"../results_{file_name}/{folder}/rois_tnogse={tnogse}_N={n}"
     os.makedirs(directory, exist_ok=True)
 
     # Guardar la imagen final

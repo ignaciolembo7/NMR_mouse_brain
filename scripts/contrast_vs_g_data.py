@@ -10,7 +10,7 @@ import seaborn as sns
 sns.set_theme(context='paper')
 sns.set_style("whitegrid")
 
-ids = ["13"] #["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"] 
+ids = ["1"] #["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"] 
 rois = ["ROI1", "ROI1"] #, "ROI1", "ROI1", "ROI1", "ROI1", "ROI1", "ROI1", "ROI1", "ROI1", "ROI1"]
 idxs = ["1", "1"] #,"1", "1","1","1","1","1","1","1","1"] #numero de roi
 

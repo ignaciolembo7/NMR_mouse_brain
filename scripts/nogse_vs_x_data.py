@@ -8,9 +8,9 @@ import seaborn as sns
 sns.set_theme(context='paper')
 sns.set_style("whitegrid")
 
-ids = ["1","2"]
-rois = ["ROI1", "ROI1"]
-idxs = [1,1]
+ids = ["2","2"]
+rois = ["ROI1", "ROI2"]
+idxs = [1,2] #mask index
 
 file_name = "mousebrain_20200409"
 folder = "nogse_vs_x_data"

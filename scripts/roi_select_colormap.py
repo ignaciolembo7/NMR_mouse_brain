@@ -43,21 +43,21 @@ def draw(event, former_x, former_y, flags, param):
 # Configuración inicial
 file_name = "mousebrain_20200409"
 data_directory = f"C:/Users/Ignacio Lembo/Documents/data/data_{file_name}"
-folder = "contrast_vs_g_colormap"
+folder = "nogse_vs_x_colormap"
 linewidth = 2
 slic = 1
-nrois = [1] # input("Nrois:") # ms
-scaling_factor = 7 # Factor de escala (puedes ajustarlo según sea necesario)
+nrois = [1,2] # input("Nrois:") # ms
+scaling_factor = 5 # Factor de escala (puedes ajustarlo según sea necesario)
 
 ROI = "ROI1"
 g = input("g: ") # mT/m
 n = int(input("N: "))
-#x = input("x: ")
+x = input("x: ")
 tnogse = input("TNOGSE: ") # ms
 id = input("id: ") # ms
 
-im = np.loadtxt(f"../results_mousebrain_20200409/{folder}/TNOGSE={tnogse}_N={n}/{ROI}_NOGSE_contrast_colormap_t={tnogse}_N={n}_G={g}.txt")
-#im = np.loadtxt(f"../results_mousebrain_20200409/{folder}/TNOGSE={tnogse}_N={n}_g={g}/{ROI}_nogse_vs_x_colormap_t={tnogse}_N={n}_G={g}_x={x}.txt")
+#im = np.loadtxt(f"../results_mousebrain_20200409/{folder}/TNOGSE={tnogse}_N={n}/{ROI}_colormap_contrast_vs_g_tnogse={tnogse}_N={n}_g={g}.txt")
+im = np.loadtxt(f"../results_mousebrain_20200409/{folder}/tnogse={tnogse}_N={n}_g={g}/{ROI}_nogse_vs_x_colormap_tnogse={tnogse}_N={n}_g={g}_x={x}.txt")
 
 norm = Normalize(vmin=np.nanmin(im), vmax=np.nanmax(im))
 cmap = plt.cm.jet

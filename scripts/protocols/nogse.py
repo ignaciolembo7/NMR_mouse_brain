@@ -474,6 +474,19 @@ def lognormal(l_c, sigma, l_c_mode):
     l_c_mid = l_c_mode*np.exp(sigma**2)
     return (1/(l_c*sigma*np.sqrt(2*np.pi))) * np.exp(-(np.log(l_c)- np.log(l_c_mid))**2 / (2*sigma**2))
 
+def M_nogse_free(TE, G, N, x, M0, D0):
+
+    g = 267.52218744 # ms**-1 mT**-1
+
+    x = np.array(x)
+    TE = np.array(TE)
+    N = np.array(N)
+    G = np.array(G)
+
+    y = TE - (N-1) * x
+
+    return M0*np.exp(-1.0/12 * g**2 * G**2 * D0 * ((N-1) * x**3 + y**3))
+
 def M_nogse_rest(TE, G, N, x, t_c, M0, D0): #D0 =2.3*10**-12
 
     g = 267.52218744 # ms**-1 mT**-1
@@ -510,6 +523,12 @@ def M_nogse_rest_dist(TE, G, N, x, l_c_mode, sigma, M0, D0):
 
     return E
 
+#def contrast_vs_g_free(TE, G, N, alpha, M0, D0):
+#    return M_nogse_free(TE, G, N, TE/N, M0, alpha*D0) - M_nogse_free(TE, G, N, 0, M0, alpha*D0)
+
+def contrast_vs_g_free(TE, G, N, M0, D0):
+    return M_nogse_free(TE, G, N, TE/N, M0, D0) - M_nogse_free(TE, G, N, 0, M0, D0)
+
 def contrast_vs_g_rest(TE, G, N, t_c, M0, D0):
     return M_nogse_rest(TE, G, N, TE/N, t_c, M0, D0) - M_nogse_rest(TE, G, N, 0, t_c, M0, D0)
 
@@ -528,7 +547,7 @@ def contrast_vs_g_restdist(TE, G, N, l_c_mode, sigma, M0, D0):
 
     return M0*E
 
-def plot_contrast_vs_g_restdist(ax, nroi, modelo, g, g_fit, f, fit, tnogse, n, slic, color):
+def plot_contrast_vs_g(ax, nroi, modelo, g, g_fit, f, fit, tnogse, n, slic, color):
     ax.plot(g, f, "o", markersize=7, linewidth=2, color = color)
     ax.plot(g_fit, fit, linewidth=2, label = nroi, color = color)
     ax.legend(title_fontsize=15, fontsize=18, loc='best')
@@ -638,7 +657,11 @@ def plot_results_brute(result, best_vals=True, varlabels=None, output=True):
     if output is not None:
         plt.savefig(output, bbox_inches="tight", dpi=500) # 
 
+def contrast_vs_g_intrarestdist_extrarestdist(TE, G, N, l_c_mode_int, l_c_mode_ext, sigma_int, sigma_ext, M0_int, M0_ext, D0_int, D0_ext):
+    return contrast_vs_g_restdist(TE, G, N, l_c_mode_int, sigma_int, M0_int, D0_int) + contrast_vs_g_restdist(TE, G, N, l_c_mode_ext, sigma_ext, M0_ext, D0_ext)
 
+def contrast_vs_g_intrarest_extrarestdist(TE, G, N, l_c_int, l_c_mode_ext, sigma_ext, M0_int, M0_ext, D0_int, D0_ext):
+    return contrast_vs_g_rest(TE, G, N, ((l_c_int*1e-6)**2)/(2*D0_int), M0_int, D0_int) + contrast_vs_g_restdist(TE, G, N, l_c_mode_ext, sigma_ext, M0_ext, D0_ext)
 
 ##########################################################################################
 
@@ -687,7 +710,6 @@ def plot_nogse_vs_x_mixto(ax, nroi, modelo, x, x_fit, f, fit, tnogse, n, g, t_c,
     title = ax.set_title("{} || Modelo: {} || $T_\mathrm{{NOGSE}}$ = {} ms  ||  $g$ = {} ||  $N$ = {} ".format(nroi, modelo, tnogse, g, n), fontsize=18)
 
 
-
 def plot_contrast_ptTNOGSE(ax, nroi, g_contrast, f, tnogse):
     ax.plot(g_contrast, f, "-o", markersize=7, linewidth = 2, label= tnogse)
     ax.set_xlabel("Intensidad de gradiente $g$ [mT/m]", fontsize=27)
@@ -712,18 +734,7 @@ def plot_nogse_vs_x_fit_ptTNOGSE(ax, nroi, x, f, tnogse, n, color):
 
 #def plot_NOGSE_vs_x_mixto(ax, nroi, modelo, g_contrast, roi, T_nogse, n, t_c_int_fit, t_c_ext_fit, alpha_fit, M0_int, M0_ext, D0_int, D0_ext):
 
-def M_nogse_free(TE, G, N, x, M0, D0):
 
-    g = 267.52218744 # ms**-1 mT**-1
-
-    x = np.array(x)
-    TE = np.array(TE)
-    N = np.array(N)
-    G = np.array(G)
-
-    y = TE - (N-1) * x
-
-    return M0*np.exp(-1.0/12 * g**2 * G**2 * D0 * ((N-1) * x**3 + y**3))
 
 def M_nogse_mixto(TE, G, N, x, t_c, alpha, M0, D0):
     return M0 * M_nogse_free(TE, G, N, x, 1, alpha*D0) * M_nogse_rest(TE, G, N, x, t_c, 1, (1-alpha)*D0)

@@ -47,14 +47,14 @@ for roi, color in zip(rois,palette):
 
     #modelo M_nogse_rest_dist
     model = lmfit.Model(nogse.contrast_vs_g_restdist, independent_vars=["TE", "G", "N", "D0"], param_names=["l_c_mode", "sigma", "M0"])
-    model.set_param_hint("M0", value=21.0, min = 15.0, max = 25.0)
-    model.set_param_hint("l_c_mode", value= 0.8, min = 0.1, max = 1.1)
-    model.set_param_hint("sigma", value= 1.1, min = 0.5, max = 1.7)
+    model.set_param_hint("M0", value=20.0, min = 19.0, max = 21.0)
+    model.set_param_hint("l_c_mode", value= 0.8, min = 0.7, max = 0.9)
+    model.set_param_hint("sigma", value= 1.0, min = 0.9, max = 1.1)
     params = model.make_params()
     #params["M0"].vary = False # fijo M0 en 1, los datos estan normalizados y no quiero que varíe
     params["l_c_mode"].vary = 1
     params["M0"].vary = 1
-    params["sigma"].vary = 0
+    params["sigma"].vary = 1
 
     result = model.fit(f, params, TE=float(tnogse), G=g, N=n, D0=D0) #Cambiar el D0 según haga falta puede ser D0_int o D0_ext
     M0_fit = result.params["M0"].value
@@ -81,8 +81,8 @@ for roi, color in zip(rois,palette):
     fig1, ax1 = plt.subplots(figsize=(8,6)) 
     fig2, ax2 = plt.subplots(figsize=(8,6)) 
 
-    nogse.plot_contrast_vs_g_restdist(ax, roi, modelo, g, g_fit, f, fit, tnogse, n, slic, color)
-    nogse.plot_contrast_vs_g_restdist(ax1, roi, modelo, g, g_fit, f, fit, tnogse, n, slic, color)
+    nogse.plot_contrast_vs_g(ax, roi, modelo, g, g_fit, f, fit, tnogse, n, slic, color)
+    nogse.plot_contrast_vs_g(ax1, roi, modelo, g, g_fit, f, fit, tnogse, n, slic, color)
 
     table = np.vstack((g_fit, fit))
     np.savetxt(f"{directory}/{roi}_adjust_contrast_vs_g_tnogse={tnogse}_N={int(n)}.txt", table.T, delimiter=' ', newline='\n')
