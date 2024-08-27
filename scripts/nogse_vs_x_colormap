@@ -1,4 +1,4 @@
-# NMRSI - Ignacio Lembo Ferrari - 29/05/2024
+# NMRSI - Ignacio Lembo Ferrari - 22/08/2024
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -13,19 +13,20 @@ file_name = "mousebrain_20200409"
 data_directory = f"C:/Users/Ignacio Lembo/Documents/data/data_{file_name}"
 folder = "nogse_vs_x_colormap"
 slic = 1
+serial = input("Serial: ") #ms
 
 image_paths, method_paths = nogse.upload_NOGSE_vs_x_data(data_directory, slic)
 
-idx = 0
 rois = ["ROI1"]  # ,"ROI2","ROI3","ROI4","ROI5"
+masks = [1]
 
 figures = []
 titles = []
 ims_combined = []  # Para almacenar todas las imágenes para la visualización combinada
 
-for roi in rois:
+for roi, mask in zip(rois, masks):
 
-    mask = np.loadtxt(f"rois/mask_" + str(idx + 1) + ".txt")
+    mask = np.loadtxt(f"rois_{file_name}/serial={serial}/slice={slic}/mask_{mask}.txt")
 
     T_nogse, g, xs, n, ims = nogse.colormap_nogse_vs_x_roi(image_paths, method_paths, mask, slic)
 
@@ -41,21 +42,20 @@ for roi in rois:
         cbar = plt.colorbar(img, ax=ax, ticks=np.linspace(0, np.nanmax(im), 8))
         cbar.set_label("Señal NOGSE", fontsize=14)
         ax.axis('off')
-        title = ax.set_title(f"$T_\\mathrm{{NOGSE}}$ = {T_nogse} ms || $g$ = {int(g)} mT/m || $N$ = {int(n)} || slice = {slic}", fontsize=18)
+        title = ax.set_title(f"$T_\\mathrm{{NOGSE}}$ = {T_nogse} ms | $g$ = {int(g)} mT/m | $N$ = {int(n)} | $x$ = {x} | slice = {slic}", fontsize=15)
 
-        directory = f"../results_{file_name}/{folder}/tnogse={T_nogse}_N={int(n)}_g={g}"
+        directory = f"../results_{file_name}/{folder}/serial={serial}/slice={slic}/tnogse={T_nogse}_g={g}_N={int(n)}"
         os.makedirs(directory, exist_ok=True)
 
-        np.savetxt(f"{directory}/{roi}_nogse_vs_x_colormap_tnogse={T_nogse}_N={int(n)}_g={g}_x={x}.txt", im, fmt='%f')
+        np.savetxt(f"{directory}/{roi}_nogse_vs_x_colormap_tnogse={T_nogse}_g={g}_N={int(n)}_x={x}.txt", im, fmt='%f')
 
         fig.tight_layout()
-        fig.savefig(f"{directory}/{roi}_nogse_vs_x_colormap_tnogse={T_nogse}_N={int(n)}_g={g}_x={x}.png", dpi=600)
+        fig.savefig(f"{directory}/{roi}_nogse_vs_x_colormap_tnogse={T_nogse}_g={g}_N={int(n)}_x={x}.png", dpi=600)
 
         titles.append(title.get_text())
         plt.close(fig)
 
-    idx += 1
-
+"""
 # Crear una imagen combinada con Matplotlib
 ncols = 5  # Número de columnas en la cuadrícula
 nrows = (len(ims) + ncols - 1) // ncols  # Número de filas en la cuadrícula
@@ -82,5 +82,6 @@ cbar = fig_combined.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=cmap), cax=cb
 cbar.set_label("Señal NOGSE", fontsize=14)
 
 fig_combined.tight_layout(rect=[0, 0, 0.9, 1])  # Ajustar para dejar espacio para la barra de color
-plt.savefig(f"{directory}/{roi}_combined_colormaps.png", dpi=600)
+plt.savefig(f"{directory}/{roi}_colormaps.png", dpi=600)
 plt.show()
+"""

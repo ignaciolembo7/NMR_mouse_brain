@@ -1,4 +1,4 @@
-#NMRSI - Ignacio Lembo Ferrari - 29/05/2024
+#NMRSI - Ignacio Lembo Ferrari - 22/08/2024
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -7,11 +7,13 @@ from lmfit import Minimizer, create_params, fit_report
 import glob 
 from brukerapi.dataset import Dataset as ds
 import seaborn as sns
-import os
-import cv2
 
 sns.set_theme(context='paper')
 sns.set_style("whitegrid")
+
+#############################################################################
+#PROCESAMIENTO DE IMAGENES 
+#############################################################################
 
 def nogse_image_params(method_path):
     with open(method_path) as file:
@@ -373,6 +375,7 @@ def generate_NOGSE_vs_x_roi(image_paths, method_paths, mask, slic):
     A0s = []
     params = []
     f = []
+    error = []
     
     for image_path, method_path in zip(image_paths, method_paths):
         ims = ds(image_path).data
@@ -392,19 +395,114 @@ def generate_NOGSE_vs_x_roi(image_paths, method_paths, mask, slic):
 
     M_matrix = np.array(experiments)
     A0_matrix = np.array(A0s)
-    E_matrix = M_matrix #/A0_matrix
+    E_matrix = M_matrix/A0_matrix
 
     for i in range(len(E_matrix)):
         roi = np.zeros_like(E_matrix[i])
         roi[mask == 255] = E_matrix[i][mask == 255]
         f.append(np.mean(roi[roi != 0]))
+        error.append(np.std(roi[roi != 0]))
 
-    return T_nogse[0], g[0], x, int(n[0]), f
+    return T_nogse[0], g[0], x, int(n[0]), f, error
 
-def plot_contrast_data(ax, nroi, g_contrast, f, tnogse, n, slic):
+#############################################################################
+#GRAFICA DE DATOS
+#############################################################################
+
+def plot_nogse_vs_x_data(ax, nroi, x, f, error, tnogse, g, n, slic):
+    ax.plot(x, f, "-o", markersize=7, linewidth = 2, label=nroi)
+    #ax.errorbar(x, f, yerr=error, fmt='o-', markersize=3, linewidth=2, capsize=5, label=nroi)
+    ax.set_xlabel("Tiempo de modulación $x$ [ms]", fontsize=27)
+    ax.set_ylabel("Señal $\mathrm{NOGSE}$", fontsize=27)
+    ax.legend(title='ROI', title_fontsize=15, fontsize=15, loc='lower right')
+    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
+    ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
+    ax.tick_params(axis='y', labelsize=16, color='black')
+    title = ax.set_title(f"$T_\mathrm{{NOGSE}}$ = {tnogse} ms | $G$ = {g} mT/m | $N$ = {int(n)} | Slice = {slic}", fontsize=15)
+    #plt.tight_layout()
+    #ax.set_xlim(0.5, 10.75)
+
+def plot_nogse_vs_x_data_ptG(ax, nroi, x, f, tnogse, g, n, slic, color):
+    ax.plot(x, f, "-o", markersize=7, linewidth = 2, color = color, label=g)
+    ax.set_xlabel("Tiempo de modulación $x$ [ms]", fontsize=27)
+    ax.set_ylabel("Señal $\mathrm{NOGSE}$ normalizada", fontsize=27)
+    ax.legend(title='$G$ [mT/m]', title_fontsize=15, fontsize=15, loc='best')
+    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
+    ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
+    ax.tick_params(axis='y', labelsize=16, color='black')
+    title = ax.set_title(f"{nroi} | $T_\mathrm{{NOGSE}}$ = {tnogse} ms  | $N$ = {int(n)} | Slice = {slic}", fontsize=15)
+    #ax.set_xlim(0.5, 10.75)
+
+def plot_nogse_vs_x_data_ptN(ax, nroi, x, f, tnogse, g, n, slic, color):
+    ax.plot(x, f, "-o", markersize=7, linewidth = 2, color = color, label=n)
+    ax.set_xlabel("Tiempo de modulación $x$ [ms]", fontsize=27)
+    ax.set_ylabel("Señal $\mathrm{NOGSE}$ normalizada", fontsize=27)
+    ax.legend(title='$N$', title_fontsize=15, fontsize=15, loc='best')
+    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
+    ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
+    ax.tick_params(axis='y', labelsize=16, color='black')
+    title = ax.set_title(f"{nroi} | $T_\mathrm{{NOGSE}}$ = {tnogse} ms | $G$ = {g} | Slice = {slic}", fontsize=15)
+    #ax.set_xlim(0.5, 10.75)
+
+def plot_nogse_vs_x_data_ptTNOGSE(ax, nroi, x, f, tnogse, n, slic, color):
+    ax.plot(x, f, "-o", markersize=7, linewidth = 2, color = color, label=tnogse)
+    ax.set_xlabel("Tiempo de modulación $x$ [ms]", fontsize=27)
+    ax.set_ylabel("Señal $\mathrm{NOGSE}$ normalizada", fontsize=27)
+    ax.legend(title='$T_\mathrm{{NOGSE}}$ [ms]', title_fontsize=15, fontsize=15, loc='best')
+    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
+    ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
+    ax.tick_params(axis='y', labelsize=16, color='black')
+    title = ax.set_title(f"{nroi} | $T_\mathrm{{NOGSE}}$ = {tnogse} ms | $N$ = {int(n)} | Slice = {slic}", fontsize=15)
+    #ax.set_xlim(0.5, 10.75)
+
+def plot_nogse_vs_x_free(ax, nroi, modelo, x, x_fit, f, fit, tnogse, n, g, alpha):
+    ax.plot(x, f, "o", markersize=7, linewidth=2)
+    ax.plot(x_fit, fit, label= nroi + "- $\\alpha = $" + str(round(alpha,4)), linewidth=2)
+    ax.legend(title_fontsize=18, fontsize=18, loc='best')
+    ax.set_xlabel("Tiempo de modulación x [ms]", fontsize=27)
+    ax.set_ylabel("Señal $\mathrm{NOGSE}$", fontsize=27)
+    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
+    ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
+    ax.tick_params(axis='y', labelsize=16, color='black')
+    title = ax.set_title(f"{modelo} | $T_\mathrm{{NOGSE}}$ = {tnogse} ms | $G$ = {g} | $N$ = {int(n)} ", fontsize=15)
+
+def plot_nogse_vs_x_restdist(ax, nroi, modelo, x, x_fit, f, fit, tnogse, g, n, slic, color):
+    ax.plot(x, f, "o", markersize=7, linewidth=2, color = color)
+    ax.plot(x_fit, fit, linewidth=2, label = nroi, color = color)
+    ax.legend(title_fontsize=15, fontsize=15, loc='best')
+    ax.set_xlabel("Tiempo de modulación $x$ [ms]", fontsize=27)
+    ax.set_ylabel("Señal $\mathrm{NOGSE}$", fontsize=27)
+    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
+    ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
+    ax.tick_params(axis='y', labelsize=16, color='black')
+    title = ax.set_title(f"{modelo} | $T_\mathrm{{NOGSE}}$ = {tnogse} ms | $G$ = {g} mT/m | $N$ = {int(n)} | slice = {slic} ", fontsize=15)
+
+def plot_nogse_vs_x_mixto(ax, nroi, x, x_fit, f, fit, tnogse, n, g, t_c, alpha):
+    ax.plot(x, f, "o", markersize=7, linewidth=2)
+    ax.plot(x_fit, fit, label= nroi + "- $\\tau_c = $" + str(round(t_c,4)) + " ms" + " - $\\alpha = $" + str(round(alpha,4)), linewidth=2)
+    ax.legend(title_fontsize=15, fontsize=18, loc='best')
+    ax.set_xlabel("Tiempo de modulación x [ms]", fontsize=18)
+    ax.set_ylabel("Señal $\mathrm{NOGSE}$", fontsize=18)
+    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
+    ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
+    ax.tick_params(axis='y', labelsize=16, color='black')
+    title = ax.set_title(f"{nroi} | $T_\mathrm{{NOGSE}}$ = {tnogse} ms | $G$ = {g} | $N$ = {int(n)} ", fontsize=15)
+
+def plot_nogse_vs_x_fit_ptTNOGSE(ax, nroi, x, f, tnogse, n, color):
+    ax.plot(x, f, linewidth = 2, color = color, label = tnogse)
+    ax.set_xlabel("Tiempo de modulación $x$ [ms]", fontsize=27)
+    ax.set_ylabel("Señal $\mathrm{NOGSE}$", fontsize=27)
+    ax.legend(title='$T_\mathrm{{NOGSE}}$ [ms]', title_fontsize=18, fontsize=18, loc='best')
+    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
+    ax.tick_params(axis='x',rotation=0, labelsize=18, color='black')
+    ax.tick_params(axis='y', labelsize=18, color='black')
+    #title = ax.set_title("{} || $T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} ".format(nroi, tnogse, n), fontsize=18)
+    #ax.set_xlim(0.5, 10.75)
+
+def plot_contrast_vs_g_data(ax, nroi, g_contrast, f, tnogse, n, slic):
     ax.plot(g_contrast, f, "-o", markersize=7, linewidth = 2, label=nroi)
-    ax.set_xlabel("Intensidad de gradiente $g$ [mT/m]", fontsize=26)
-    ax.set_ylabel("Contraste $\mathrm{NOGSE}$ $\Delta M$", fontsize=26)
+    ax.set_xlabel("Intensidad de gradiente $g$ [mT/m]", fontsize=27)
+    ax.set_ylabel("Contraste $\mathrm{NOGSE}$ $\Delta M$", fontsize=27)
     ax.legend(title='ROI', title_fontsize=18, fontsize=18, loc='upper right')
     ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
     ax.tick_params(axis='x',rotation=0, labelsize=18, color='black')
@@ -413,139 +511,16 @@ def plot_contrast_data(ax, nroi, g_contrast, f, tnogse, n, slic):
     #plt.tight_layout()    
     #ax.set_xlim(0.5, 10.75)
 
-def plot_nogse_vs_x_data(ax, nroi, x, f, tnogse, n, slic):
-    ax.plot(x, f, "-o", markersize=7, linewidth = 2, label=nroi)
-    ax.set_xlabel("Tiempo de modulación $x$ [ms]", fontsize=18)
-    ax.set_ylabel("Señal $\mathrm{NOGSE}$ [u.a.]", fontsize=18)
-    ax.legend(title='ROI', title_fontsize=18, fontsize=18, loc='lower right')
-    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
-    ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
-    ax.tick_params(axis='y', labelsize=16, color='black')
-    title = ax.set_title("$T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} || slice = {} ".format(tnogse, n, slic), fontsize=18)
-    #plt.tight_layout()
-    #ax.set_xlim(0.5, 10.75)
-
-def plot_nogse_vs_x_data_ptG(ax, nroi, x, f, tnogse, g, n, slic, color):
-    ax.plot(x, f, "-o", markersize=7, linewidth = 2, color = color, label=g)
-    ax.set_xlabel("Tiempo de modulación $x$ [ms]", fontsize=27)
-    ax.set_ylabel("Señal $\mathrm{NOGSE}$ normalizada", fontsize=27)
-    ax.legend(title='$G$ [mT/m]', title_fontsize=12, fontsize=12, loc='best')
+def plot_contrast_vs_g_ptTNOGSE(ax, nroi, g_contrast, f, tnogse):
+    ax.plot(g_contrast, f, "-o", markersize=7, linewidth = 2, label= tnogse)
+    ax.set_xlabel("Intensidad de gradiente $g$ [mT/m]", fontsize=27)
+    ax.set_ylabel("Contraste $\mathrm{NOGSE}$ $\Delta M$ [u.a.]", fontsize=27)
+    ax.legend(title='$T_\mathrm{{NOGSE}}$ [ms]', title_fontsize=18, fontsize=18, loc='upper right')
     ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
     ax.tick_params(axis='x',rotation=0, labelsize=18, color='black')
     ax.tick_params(axis='y', labelsize=18, color='black')
-    title = ax.set_title("{} || $T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} || Slice = {}".format(nroi, tnogse, n, slic), fontsize=18)
-    #ax.set_xlim(0.5, 10.75)
-
-def plot_nogse_vs_x_data_ptN(ax, nroi, x, f, tnogse, g, n, slic, color):
-    ax.plot(x, f, "-o", markersize=7, linewidth = 2, color = color, label=n)
-    ax.set_xlabel("Tiempo de modulación $x$ [ms]", fontsize=27)
-    ax.set_ylabel("Señal $\mathrm{NOGSE}$ normalizada", fontsize=27)
-    ax.legend(title='$N$', title_fontsize=12, fontsize=12, loc='best')
-    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
-    ax.tick_params(axis='x',rotation=0, labelsize=18, color='black')
-    ax.tick_params(axis='y', labelsize=18, color='black')
-    title = ax.set_title("{} || $T_\mathrm{{NOGSE}}$ = {} ms  ||  $G$ = {} || Slice = {}".format(nroi, tnogse, g, slic), fontsize=18)
-    #ax.set_xlim(0.5, 10.75)
-
-def plot_nogse_vs_x_data_ptTNOGSE(ax, nroi, x, f, tnogse, n, slic, color):
-    ax.plot(x, f, "-o", markersize=7, linewidth = 2, color = color, label=tnogse)
-    ax.set_xlabel("Tiempo de modulación $x$ [ms]", fontsize=27)
-    ax.set_ylabel("Señal $\mathrm{NOGSE}$ normalizada", fontsize=27)
-    ax.legend(title='$T_\mathrm{{NOGSE}}$ [ms]', title_fontsize=18, fontsize=18, loc='best')
-    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
-    ax.tick_params(axis='x',rotation=0, labelsize=18, color='black')
-    ax.tick_params(axis='y', labelsize=18, color='black')
-    title = ax.set_title("{} || $T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} || Slice = {}".format(nroi, tnogse, n, slic), fontsize=18)
-    #ax.set_xlim(0.5, 10.75)
-
-def plot_nogse_vs_x_restdist(ax, nroi, modelo, x, x_fit, f, fit, tnogse, n, slic, color):
-    ax.plot(x, f, "o", markersize=7, linewidth=2, color = color)
-    ax.plot(x_fit, fit, linewidth=2, label = nroi, color = color)
-    ax.legend(title_fontsize=15, fontsize=18, loc='best')
-    ax.set_xlabel("Intensidad de gradiente $g$ [mT/m]", fontsize=26)
-    ax.set_ylabel("Contraste $\mathrm{NOGSE}$ $\Delta M$", fontsize=26)
-    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
-    ax.tick_params(axis='x',rotation=0, labelsize=18, color='black')
-    ax.tick_params(axis='y', labelsize=18, color='black')
-    title = ax.set_title("$T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} || slice = {} ".format(tnogse, n, slic), fontsize=18)
-
-def lognormal(l_c, sigma, l_c_mode):
-    #l_c_mid = l_c_median*np.exp((sigma**2)/2)
-    l_c_mid = l_c_mode*np.exp(sigma**2)
-    return (1/(l_c*sigma*np.sqrt(2*np.pi))) * np.exp(-(np.log(l_c)- np.log(l_c_mid))**2 / (2*sigma**2))
-
-def M_nogse_free(TE, G, N, x, M0, D0):
-
-    g = 267.52218744 # ms**-1 mT**-1
-
-    x = np.array(x)
-    TE = np.array(TE)
-    N = np.array(N)
-    G = np.array(G)
-
-    y = TE - (N-1) * x
-
-    return M0*np.exp(-1.0/12 * g**2 * G**2 * D0 * ((N-1) * x**3 + y**3))
-
-def M_nogse_rest(TE, G, N, x, t_c, M0, D0): #D0 =2.3*10**-12
-
-    g = 267.52218744 # ms**-1 mT**-1
-
-    x = np.array(x)
-    TE = np.array(TE)
-    N = np.array(N)
-    G = np.array(G)
-
-    y = TE - (N-1) * x
-
-    bSE=g*G*np.sqrt(D0*t_c)
-
-    return M0 * np.exp(-bSE ** 2 * t_c ** 2 * (4 * np.exp(-y / t_c / 2) - np.exp(-y / t_c) - 3 + y / t_c)) * np.exp(-bSE ** 2 * t_c ** 2 * ((N - 1) * x / t_c + (-1) ** (N - 1) * np.exp(-(N - 1) * x / t_c) + 1 - 2 * N - 4 * np.exp(-(N - 1) * x / t_c) ** (1 / (N - 1) / 2) * (-np.exp(-(N - 1) * x / t_c) ** (1 / (N - 1))) ** (N - 1) / (np.exp(-(N - 1) * x / t_c) ** (1 / (N - 1)) + 1) + 4 * np.exp(-(N - 1) * x / t_c) ** (1 / (N - 1) / 2) / (np.exp(-(N - 1) * x / t_c) ** (1 / (N - 1)) + 1) + 4 * (-np.exp(-(N - 1) * x / t_c) ** (1 / (N - 1))) ** (N - 1) * np.exp(-(N - 1) * x / t_c) ** (1 / (N - 1)) / (np.exp(-(N - 1) * x / t_c) ** (1 / (N - 1)) + 1) ** 2 + 4 * np.exp(-(N - 1) * x / t_c) ** (1 / (N - 1)) * ((N - 1) * np.exp(-(N - 1) * x / t_c) ** (1 / (N - 1)) + N - 2) / (np.exp(-(N - 1) * x / t_c) ** (1 / (N - 1)) + 1) ** 2)) * np.exp(2 * t_c ** 2 * ((np.exp((-y + 2 * x) / t_c / 2) + np.exp((x - 2 * y) / t_c / 2) - np.exp((x - y) / t_c) / 2 - np.exp(-y / t_c) / 2 + np.exp(x / t_c / 2) + np.exp(-y / t_c / 2) - np.exp(x / t_c) / 2 - 0.1e1 / 0.2e1) * (-1) ** (2 * N) + 2 * (-1) ** (1 + N) * np.exp(-(2 * N * x - 3 * x + y) / t_c / 2) + (np.exp(((3 - 2 * N) * x - 2 * y) / t_c / 2) - np.exp((-N * x + 2 * x - y) / t_c) / 2 + np.exp(-(2 * N * x - 4 * x + y) / t_c / 2) + np.exp(-(2 * N * x - 2 * x + y) / t_c / 2) - np.exp((-N * x + x - y) / t_c) / 2 + np.exp(-x * (-3 + 2 * N) / t_c / 2) - np.exp(-x * (N - 2) / t_c) / 2 - np.exp(-(N - 1) * x / t_c) / 2) * (-1) ** N + 2 * (-1) ** (1 + 2 * N) * np.exp((x - y) / t_c / 2)) * bSE ** 2 / (np.exp(x / t_c) + 1))
-
-def M_nogse_rest_dist(TE, G, N, x, l_c_mode, sigma, M0, D0):
-    #sigma = 0.06416131084794455
-    #l_cmid = 7.3*10**-6
-
-    if sigma<0:
-        return 1e20
-
-    n = 100
-    lmax = 40 #um esto es hasta un tau_c de 135ms
-
-    l_cs = np.linspace(0.5, lmax, n) #menos que 0.5 hace que diverja el ajuste
-    weights = lognormal(l_cs, sigma, l_c_mode)
-    weights = weights/np.sum(weights)
-
-    E = np.zeros(len(x))
-
-    for l_c, w in zip(l_cs, weights):
-        E = E + M_nogse_rest(TE, G, N, x, (l_c**2)/(2*D0*1e12), M0, D0)*w
-
-    return E
-
-#def contrast_vs_g_free(TE, G, N, alpha, M0, D0):
-#    return M_nogse_free(TE, G, N, TE/N, M0, alpha*D0) - M_nogse_free(TE, G, N, 0, M0, alpha*D0)
-
-def contrast_vs_g_free(TE, G, N, M0, D0):
-    return M_nogse_free(TE, G, N, TE/N, M0, D0) - M_nogse_free(TE, G, N, 0, M0, D0)
-
-def contrast_vs_g_rest(TE, G, N, t_c, M0, D0):
-    return M_nogse_rest(TE, G, N, TE/N, t_c, M0, D0) - M_nogse_rest(TE, G, N, 0, t_c, M0, D0)
-
-def contrast_vs_g_restdist(TE, G, N, l_c_mode, sigma, M0, D0):
-    n = 100
-    lmax = 10
-
-    l_cs = np.linspace(0.5, lmax, n) #menos que 0.5 hace que diverja el ajuste
-    weights = lognormal(l_cs, sigma, l_c_mode)
-    weights = weights/np.sum(weights)
-
-    E = np.zeros(len(G))
-
-    for l_c, w in zip(l_cs, weights):
-        E = E + contrast_vs_g_rest(TE, G, N, (l_c**2)/(D0*1e12) , M0, D0)*w
-
-    return M0*E
+    #title = ax.set_title("{} || $T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} ".format(nroi, tnogse, n), fontsize=18)
+    ax.set_xlim(-10, 1200)
 
 def plot_contrast_vs_g(ax, nroi, modelo, g, g_fit, f, fit, tnogse, n, slic, color):
     ax.plot(g, f, "o", markersize=7, linewidth=2, color = color)
@@ -566,14 +541,13 @@ def plot_lognorm_dist(ax, nroi, tnogse, n, l_c, l_c_mode, sigma, slic, color):
     plt.axvline(x=l_c_median, color='g', linestyle='--', label = "Mediana") 
     plt.axvline(x=l_c_mid, color='b', linestyle='--', label = "Media") 
     ax.plot(l_c, dist, "-", color=color, linewidth = 2, label = nroi)
-    ax.set_xlabel("Longitud de correlación $l_c$ [$\mu$m]", fontsize=26)
-    ax.set_ylabel("P($l_c$)", fontsize=26)
-    ax.legend(title='$T_\mathrm{{NOGSE}}$ [ms]', title_fontsize=18, fontsize=18, loc='upper right')
-    ax.legend( fontsize=18, loc='best')
+    ax.set_xlabel("Longitud de correlación $l_c$ [$\mu$m]", fontsize=27)
+    ax.set_ylabel("P($l_c$)", fontsize=27)
+    ax.legend(title='$T_\mathrm{{NOGSE}}$ [ms]', title_fontsize=15, fontsize=15, loc='upper right')
     ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
-    ax.tick_params(axis='x',rotation=0, labelsize=18, color='black')
-    ax.tick_params(axis='y', labelsize=18, color='black')
-    title = ax.set_title("$T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} || slice = {} ".format(tnogse, n, slic), fontsize=18)
+    ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
+    ax.tick_params(axis='y', labelsize=16, color='black')
+    title = ax.set_title(f"$T_\mathrm{{NOGSE}}$ = {tnogse} ms | $N$ = {int(n)} | slice = {slic} ", fontsize=15)
     ax.fill_between(l_c, dist, color=color, alpha=0.3)
     #ax.set_xlim(0.5, 10.75)
 
@@ -663,7 +637,97 @@ def contrast_vs_g_intrarestdist_extrarestdist(TE, G, N, l_c_mode_int, l_c_mode_e
 def contrast_vs_g_intrarest_extrarestdist(TE, G, N, l_c_int, l_c_mode_ext, sigma_ext, M0_int, M0_ext, D0_int, D0_ext):
     return contrast_vs_g_rest(TE, G, N, ((l_c_int*1e-6)**2)/(2*D0_int), M0_int, D0_int) + contrast_vs_g_restdist(TE, G, N, l_c_mode_ext, sigma_ext, M0_ext, D0_ext)
 
-##########################################################################################
+#############################################################################
+#AJUSTE DE DATOS
+#############################################################################
+
+def lognormal(l_c, sigma, l_c_mode):
+    #l_c_mid = l_c_median*np.exp((sigma**2)/2)
+    l_c_mid = l_c_mode*np.exp(sigma**2)
+    return (1/(l_c*sigma*np.sqrt(2*np.pi))) * np.exp(-(np.log(l_c)- np.log(l_c_mid))**2 / (2*sigma**2))
+
+def M_nogse_free(TE, G, N, x, M0, D0):
+
+    g = 267.52218744 # ms**-1 mT**-1
+
+    x = np.array(x)
+    TE = np.array(TE)
+    N = np.array(N)
+    G = np.array(G)
+
+    y = TE - (N-1) * x
+
+    return M0*np.exp(-1.0/12 * g**2 * G**2 * D0 * ((N-1) * x**3 + y**3))
+
+def M_nogse_rest(TE, G, N, x, t_c, M0, D0): #D0 =2.3*10**-12
+
+    g = 267.52218744 # ms**-1 mT**-1
+
+    x = np.array(x)
+    TE = np.array(TE)
+    N = np.array(N)
+    G = np.array(G)
+
+    y = TE - (N-1) * x
+
+    bSE=g*G*np.sqrt(D0*t_c)
+
+    return M0 * np.exp(-bSE ** 2 * t_c ** 2 * (4 * np.exp(-y / t_c / 2) - np.exp(-y / t_c) - 3 + y / t_c)) * np.exp(-bSE ** 2 * t_c ** 2 * ((N - 1) * x / t_c + (-1) ** (N - 1) * np.exp(-(N - 1) * x / t_c) + 1 - 2 * N - 4 * np.exp(-(N - 1) * x / t_c) ** (1 / (N - 1) / 2) * (-np.exp(-(N - 1) * x / t_c) ** (1 / (N - 1))) ** (N - 1) / (np.exp(-(N - 1) * x / t_c) ** (1 / (N - 1)) + 1) + 4 * np.exp(-(N - 1) * x / t_c) ** (1 / (N - 1) / 2) / (np.exp(-(N - 1) * x / t_c) ** (1 / (N - 1)) + 1) + 4 * (-np.exp(-(N - 1) * x / t_c) ** (1 / (N - 1))) ** (N - 1) * np.exp(-(N - 1) * x / t_c) ** (1 / (N - 1)) / (np.exp(-(N - 1) * x / t_c) ** (1 / (N - 1)) + 1) ** 2 + 4 * np.exp(-(N - 1) * x / t_c) ** (1 / (N - 1)) * ((N - 1) * np.exp(-(N - 1) * x / t_c) ** (1 / (N - 1)) + N - 2) / (np.exp(-(N - 1) * x / t_c) ** (1 / (N - 1)) + 1) ** 2)) * np.exp(2 * t_c ** 2 * ((np.exp((-y + 2 * x) / t_c / 2) + np.exp((x - 2 * y) / t_c / 2) - np.exp((x - y) / t_c) / 2 - np.exp(-y / t_c) / 2 + np.exp(x / t_c / 2) + np.exp(-y / t_c / 2) - np.exp(x / t_c) / 2 - 0.1e1 / 0.2e1) * (-1) ** (2 * N) + 2 * (-1) ** (1 + N) * np.exp(-(2 * N * x - 3 * x + y) / t_c / 2) + (np.exp(((3 - 2 * N) * x - 2 * y) / t_c / 2) - np.exp((-N * x + 2 * x - y) / t_c) / 2 + np.exp(-(2 * N * x - 4 * x + y) / t_c / 2) + np.exp(-(2 * N * x - 2 * x + y) / t_c / 2) - np.exp((-N * x + x - y) / t_c) / 2 + np.exp(-x * (-3 + 2 * N) / t_c / 2) - np.exp(-x * (N - 2) / t_c) / 2 - np.exp(-(N - 1) * x / t_c) / 2) * (-1) ** N + 2 * (-1) ** (1 + 2 * N) * np.exp((x - y) / t_c / 2)) * bSE ** 2 / (np.exp(x / t_c) + 1))
+
+def M_nogse_rest_dist(TE, G, N, x, l_c_mode, sigma, M0, D0):
+    #sigma = 0.06416131084794455
+    #l_cmid = 7.3*10**-6
+
+    if sigma<0:
+        return 1e20
+
+    n = 100
+    lmax = 40 #um esto es hasta un tau_c de 135ms
+
+    l_cs = np.linspace(0.5, lmax, n) #menos que 0.5 hace que diverja el ajuste
+    weights = lognormal(l_cs, sigma, l_c_mode)
+    weights = weights/np.sum(weights)
+
+    E = np.zeros(len(x))
+
+    for l_c, w in zip(l_cs, weights):
+        E = E + M_nogse_rest(TE, G, N, x, (l_c**2)/(2*D0*1e12), M0, D0)*w
+
+    return E
+
+#def contrast_vs_g_free(TE, G, N, alpha, M0, D0):
+#    return M_nogse_free(TE, G, N, TE/N, M0, alpha*D0) - M_nogse_free(TE, G, N, 0, M0, alpha*D0)
+
+def contrast_vs_g_free(TE, G, N, M0, D0):
+    return M_nogse_free(TE, G, N, TE/N, M0, D0) - M_nogse_free(TE, G, N, 0, M0, D0)
+
+def contrast_vs_g_rest(TE, G, N, t_c, M0, D0):
+    return M_nogse_rest(TE, G, N, TE/N, t_c, M0, D0) - M_nogse_rest(TE, G, N, 0, t_c, M0, D0)
+
+def contrast_vs_g_restdist(TE, G, N, l_c_mode, sigma, M0, D0):
+    n = 100
+    lmax = 10
+
+    l_cs = np.linspace(0.5, lmax, n) #menos que 0.5 hace que diverja el ajuste
+    weights = lognormal(l_cs, sigma, l_c_mode)
+    weights = weights/np.sum(weights)
+
+    E = np.zeros(len(G))
+
+    for l_c, w in zip(l_cs, weights):
+        E = E + contrast_vs_g_rest(TE, G, N, (l_c**2)/(D0*1e12) , M0, D0)*w
+
+    return M0*E
+
+
+
+#############################################################################
+
+
+
+
+
+
 
 
 def plot_contrast_rest_mixto_levs(ax, nroi, modelo, g_contrast, roi, T_nogse, n, t_c_int_fit, t_c_ext_fit, alpha_fit, M0_int, M0_ext, D0_int, D0_ext):
@@ -685,52 +749,6 @@ def plot_contrast_rest_mixto_levs(ax, nroi, modelo, g_contrast, roi, T_nogse, n,
     ax.tick_params(axis='y', labelsize=16, color='black')
     title = ax.set_title("{} || Modelo: {} || $T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} ".format(nroi, modelo, T_nogse, int(n)), fontsize=18)
 
-def plot_nogse_vs_x_free(ax, nroi, modelo, x, x_fit, f, fit, tnogse, n, g, alpha):
-    ax.plot(x, f, "o", markersize=7, linewidth=2)
-    ax.plot(x_fit, fit, label= nroi + "- $\\alpha = $" + str(round(alpha,4)), linewidth=2)
-    ax.legend(title_fontsize=15, fontsize=18, loc='best')
-    ax.set_xlabel("Tiempo de modulación x [ms]", fontsize=18)
-    ax.set_ylabel("Señal $\mathrm{NOGSE}$", fontsize=18)
-    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
-    ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
-    ax.tick_params(axis='y', labelsize=16, color='black')
-    title = ax.set_title("{} || Modelo: {} || $T_\mathrm{{NOGSE}}$ = {} ms  ||  $g$ = {} ||  $N$ = {} ".format(nroi, modelo, tnogse, g, n), fontsize=18)
-
-
-
-def plot_nogse_vs_x_mixto(ax, nroi, modelo, x, x_fit, f, fit, tnogse, n, g, t_c, alpha):
-    ax.plot(x, f, "o", markersize=7, linewidth=2)
-    ax.plot(x_fit, fit, label= nroi + "- $\\tau_c = $" + str(round(t_c,4)) + " ms" + " - $\\alpha = $" + str(round(alpha,4)), linewidth=2)
-    ax.legend(title_fontsize=15, fontsize=18, loc='best')
-    ax.set_xlabel("Tiempo de modulación x [ms]", fontsize=18)
-    ax.set_ylabel("Señal $\mathrm{NOGSE}$", fontsize=18)
-    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
-    ax.tick_params(axis='x',rotation=0, labelsize=16, color='black')
-    ax.tick_params(axis='y', labelsize=16, color='black')
-    title = ax.set_title("{} || Modelo: {} || $T_\mathrm{{NOGSE}}$ = {} ms  ||  $g$ = {} ||  $N$ = {} ".format(nroi, modelo, tnogse, g, n), fontsize=18)
-
-
-def plot_contrast_ptTNOGSE(ax, nroi, g_contrast, f, tnogse):
-    ax.plot(g_contrast, f, "-o", markersize=7, linewidth = 2, label= tnogse)
-    ax.set_xlabel("Intensidad de gradiente $g$ [mT/m]", fontsize=27)
-    ax.set_ylabel("Contraste $\mathrm{NOGSE}$ $\Delta M$ [u.a.]", fontsize=27)
-    ax.legend(title='$T_\mathrm{{NOGSE}}$ [ms]', title_fontsize=18, fontsize=18, loc='upper right')
-    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
-    ax.tick_params(axis='x',rotation=0, labelsize=18, color='black')
-    ax.tick_params(axis='y', labelsize=18, color='black')
-    #title = ax.set_title("{} || $T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} ".format(nroi, tnogse, n), fontsize=18)
-    ax.set_xlim(-10, 1200)
-
-def plot_nogse_vs_x_fit_ptTNOGSE(ax, nroi, x, f, tnogse, n, color):
-    ax.plot(x, f, linewidth = 2, color = color, label = tnogse)
-    ax.set_xlabel("Tiempo de modulación $x$ [ms]", fontsize=27)
-    ax.set_ylabel("Señal $\mathrm{NOGSE}$", fontsize=27)
-    ax.legend(title='$T_\mathrm{{NOGSE}}$ [ms]', title_fontsize=18, fontsize=18, loc='best')
-    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True)
-    ax.tick_params(axis='x',rotation=0, labelsize=18, color='black')
-    ax.tick_params(axis='y', labelsize=18, color='black')
-    #title = ax.set_title("{} || $T_\mathrm{{NOGSE}}$ = {} ms  ||  $N$ = {} ".format(nroi, tnogse, n), fontsize=18)
-    #ax.set_xlim(0.5, 10.75)
 
 #def plot_NOGSE_vs_x_mixto(ax, nroi, modelo, g_contrast, roi, T_nogse, n, t_c_int_fit, t_c_ext_fit, alpha_fit, M0_int, M0_ext, D0_int, D0_ext):
 
@@ -786,7 +804,6 @@ def delta_M_mixto_dist(t_c_mid, sigma, TE, G, N, alpha, M0, D0):
         out = out + delta_M_mixto(TE, G, N, t_c, alpha, M0, D0)*w
 
     return M0*out
-
 
 
 def delta_M_intra_extra_dist(TE, G, N, t_c_mid_int, t_c_mid_ext, sigma_int, sigma_ext, alpha, M0_int, M0_ext, D0_int, D0_ext):

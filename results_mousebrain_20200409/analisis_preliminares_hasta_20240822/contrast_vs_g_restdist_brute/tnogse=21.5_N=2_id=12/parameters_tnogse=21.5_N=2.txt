@@ -1,0 +1,12 @@
+ROI1  - M0 =  22.25 +- None
+      - l_c_mode =  0.05 +- None
+      - l_c_median =  1.2766860873675765 +-
+      - l_c_mid =  6.451210105368912 +-
+      - sigma =  1.8 +- None
+      - D0 =  7e-13 +-
+ROI1  - M0 =  21.5 +- None
+      - l_c_mode =  0.2 +- None
+      - l_c_median =  1.8975471672717052 +-
+      - l_c_mid =  5.844856756246988 +-
+      - sigma =  1.5 +- None
+      - D0 =  7e-13 +-

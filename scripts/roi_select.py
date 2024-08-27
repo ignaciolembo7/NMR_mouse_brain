@@ -1,10 +1,9 @@
-#NMRSI - Ignacio Lembo Ferrari - 25/04/2024
+#NMRSI - Ignacio Lembo Ferrari - 22/08/2024
 
 import cv2
 import numpy as np
-import argparse
 from brukerapi.dataset import Dataset as ds
-import matplotlib.pyplot as plt
+import os
 
 def draw_circle(event, x, y, flags, param):
     global center, radius, drawing, mode
@@ -55,8 +54,9 @@ def draw(event, former_x, former_y, flags, param):
 
     return former_x, former_y
 
+file_name = "mousebrain_20200409"
 serial = input("Serial: ") #ms
-nrois = 1 #input("Nrois:") #ms
+nrois = [1]
 slic = 1
 scaling_factor = 5 # Factor de escala (puedes ajustarlo según sea necesario)
 ims = ds(f"C:/Users/Ignacio Lembo/Documents/data/data_mousebrain_20200409/"+str(serial)+"/pdata/1/2dseq").data
@@ -65,16 +65,19 @@ A0_matrix = ims[:,:,slic,0]
 M_matrix = ims[:,:,slic,1]
 original = M_matrix #/A0_matrix 
 
-np.savetxt(f"rois/original.txt", original, fmt='%f')
+directory = f"rois_{file_name}/serial={serial}/slice={slic}"
+os.makedirs(directory, exist_ok=True)
+
+np.savetxt(f"{directory}/original.txt", original, fmt='%f')
 
 #Equalize original
 original_eq = 255 * (original - np.min(original)) / (np.max(original) - np.min(original)) + 255*(np.min(original) / (np.max(original) - np.min(original)) )
 
-cv2.imwrite(f"rois/original_eq.jpg", original_eq)
+cv2.imwrite(f"{directory}/original_eq.jpg", original_eq)
 
-im = cv2.imread(f"rois/original_eq.jpg", cv2.IMREAD_GRAYSCALE)
+im = cv2.imread(f"{directory}/original_eq.jpg", cv2.IMREAD_GRAYSCALE)
 
-for i in range(nrois):
+for nroi in nrois:
 
     drawing = False  # True if mouse is pressed
     mode = True  # If True, draw rectangle. Press 'm' to toggle to curve
@@ -104,16 +107,16 @@ for i in range(nrois):
     roi = np.zeros_like(original)
     roi[mask_resized == 255] = original[mask_resized == 255]
     signal = np.mean(roi[roi != 0])
-    print(f"Average intensity of ROI {i+1}: {signal}")
+    print(f"Average intensity of ROI {nroi}: {signal}")
 
     # Save roi
-    np.savetxt(f"rois/roi_{i+1}.txt", roi, fmt='%f')
+    np.savetxt(f"{directory}/roi_{nroi}.txt", roi, fmt='%f')
     roi = (roi * 255).astype(np.uint8)
-    cv2.imwrite(f"rois/roi_{i+1}.jpg", roi)
+    cv2.imwrite(f"{directory}/roi_{nroi}.jpg", roi)
 
     # Save mask
-    np.savetxt(f"rois/mask_{i+1}.txt", mask_resized, fmt='%f')
-    cv2.imwrite(f"rois/mask_{i+1}.jpg", mask_resized)
+    np.savetxt(f"{directory}/mask_{nroi}.txt", mask_resized, fmt='%f')
+    cv2.imwrite(f"{directory}/mask_{nroi}.jpg", mask_resized)
 
     print("original size: ", original.shape)
     print("mask size: ", mask_resized.shape)
@@ -124,15 +127,15 @@ cv2.destroyAllWindows()
 # Iterar sobre todas las máscaras de las ROIs y superponerlas en la imagen final
 imagen_final = im.copy()
 
-for i in range(1, nrois+1): 
-    mask_roi = cv2.imread(f"rois/mask_{i}.jpg", cv2.IMREAD_GRAYSCALE)
+for nmask in nrois: 
+    mask_roi = cv2.imread(f"{directory}/mask_{nmask}.jpg", cv2.IMREAD_GRAYSCALE)
     imagen_final = cv2.add(imagen_final, mask_roi)
 
 # Guardar la imagen final
-cv2.imwrite(f"rois/rois_final.jpg", imagen_final)
+cv2.imwrite(f"{directory}/rois_final.jpg", imagen_final)
 
 # Cargar la imagen en escala de grises
-imagen_final = cv2.imread(f"rois/rois_final.jpg", cv2.IMREAD_GRAYSCALE)
+imagen_final = cv2.imread(f"{directory}/rois_final.jpg", cv2.IMREAD_GRAYSCALE)
 
 # Convertir la imagen en escala de grises a color
 imagen_color = cv2.cvtColor(imagen_final, cv2.COLOR_GRAY2BGR)
@@ -147,4 +150,4 @@ indices_blancos = np.where((imagen_final >= 250) & (imagen_final <= 255))
 imagen_color[indices_blancos] = color_rojo
 
 # Guardar la imagen final
-cv2.imwrite(f"../images/rois_final_color.jpg", imagen_color)
+cv2.imwrite(f"{directory}/rois_final_color.jpg", imagen_color)

@@ -33,7 +33,7 @@ def draw(event, former_x, former_y, flags, param):
             # Guarda una copia de la máscara antes de floodFill
             mask_contour = mask.copy()
             mask_contour[mask_contour != 0] = 255
-            cv2.imwrite(f"rois/id={id}_mask_contour_{i}.jpg", mask_contour)
+            cv2.imwrite(f"rois_{file_name}/serial={serial}/slice={slic}/id={id}_mask_contour={nroi}.jpg", mask_contour)
 
             # Fill the enclosed area in the mask with white
             cv2.floodFill(mask, None, (0, 0), (255))
@@ -42,22 +42,22 @@ def draw(event, former_x, former_y, flags, param):
 
 # Configuración inicial
 file_name = "mousebrain_20200409"
-data_directory = f"C:/Users/Ignacio Lembo/Documents/data/data_{file_name}"
 folder = "nogse_vs_x_colormap"
 linewidth = 2
 slic = 1
-nrois = [1,2] # input("Nrois:") # ms
+rois = [1,2,3,4,5] # input("Nrois:") # ms
 scaling_factor = 5 # Factor de escala (puedes ajustarlo según sea necesario)
 
 ROI = "ROI1"
+serial = input("Serial: ") 
+id = input("id: ") # ms
+tnogse = input("Tnogse: ") # ms
 g = input("g: ") # mT/m
 n = int(input("N: "))
 x = input("x: ")
-tnogse = input("TNOGSE: ") # ms
-id = input("id: ") # ms
 
 #im = np.loadtxt(f"../results_mousebrain_20200409/{folder}/TNOGSE={tnogse}_N={n}/{ROI}_colormap_contrast_vs_g_tnogse={tnogse}_N={n}_g={g}.txt")
-im = np.loadtxt(f"../results_mousebrain_20200409/{folder}/tnogse={tnogse}_N={n}_g={g}/{ROI}_nogse_vs_x_colormap_tnogse={tnogse}_N={n}_g={g}_x={x}.txt")
+im = np.loadtxt(f"../results_mousebrain_20200409/{folder}/serial={serial}/slice={slic}/tnogse={tnogse}_g={g}_N={n}/{ROI}_nogse_vs_x_colormap_tnogse={tnogse}_g={g}_N={n}_x={x}.txt")
 
 norm = Normalize(vmin=np.nanmin(im), vmax=np.nanmax(im))
 cmap = plt.cm.jet
@@ -70,10 +70,7 @@ im_rgb = (cmap(im_normalized)[:, :, :3] * 255).astype(np.uint8)
 im[np.isnan(im)] = 0
 im = im.astype(np.uint8)  
 
-np.savetxt(f"rois/original.txt", im, fmt='%f')
-
-# Guardar las ROI y las máscaras
-for i in nrois:
+for nroi in rois:
 
     drawing = False  # True if mouse is pressed
     mode = True  # If True, draw rectangle. Press 'm' to toggle to curve
@@ -103,35 +100,35 @@ for i in nrois:
     roi = np.zeros_like(im)
     roi[mask_resized == 255] = im[mask_resized == 255]
     signal = np.mean(roi[roi != 0])
-    print(f"Average intensity of ROI {i}: {signal}")
+    print(f"Average intensity of ROI {nroi}: {signal}")
 
     # Save roi
-    np.savetxt(f"rois/id={id}_roi_{i}.txt", roi, fmt='%f')
+    np.savetxt(f"rois_{file_name}/serial={serial}/slice={slic}/id={id}_roi={nroi}.txt", roi, fmt='%f')
     roi = (roi * 255).astype(np.uint8)
-    cv2.imwrite(f"rois/id={id}_roi_{i}.jpg", roi)
+    cv2.imwrite(f"rois_{file_name}/serial={serial}/slice={slic}/id={id}_roi={nroi}.jpg", roi)
 
     # Save mask
-    np.savetxt(f"rois/id={id}_mask_{i}.txt", mask_resized, fmt='%f')
-    cv2.imwrite(f"rois/id={id}_mask_{i}.jpg", mask_resized)
+    np.savetxt(f"rois_{file_name}/serial={serial}/slice={slic}/id={id}_mask={nroi}.txt", mask_resized, fmt='%f')
+    cv2.imwrite(f"rois_{file_name}/serial={serial}/slice={slic}/id={id}_mask={nroi}.jpg", mask_resized)
 
 cv2.destroyAllWindows()
 
 # Iterar sobre todas las máscaras de las ROIs y superponerlas en la imagen final
 imagen_final_contour = im_rgb_scaled.copy()
 
-for i in nrois: 
-    mask_contour = cv2.imread(f"rois/id={id}_mask_contour_{i}.jpg")
+for nroi in rois: 
+    mask_contour = cv2.imread(f"rois_{file_name}//serial={serial}/slice={slic}/id={id}_mask_contour={nroi}.jpg")
     imagen_final_contour = cv2.add(imagen_final_contour, mask_contour)
 
 # Guardar la imagen final
-cv2.imwrite(f"rois/id={id}_rois_final_contour.jpg", imagen_final_contour)
+cv2.imwrite(f"rois_{file_name}/serial={serial}/slice={slic}/id={id}_rois_final_contour.jpg", imagen_final_contour)
 
 # Iterar sobre todas las máscaras de las ROIs y superponerlas en la imagen final
 imagen_final = im.copy()
 
-for i in nrois: 
-    mask_roi = cv2.imread(f"rois/id={id}_mask_{i}.jpg", cv2.IMREAD_GRAYSCALE)
+for nroi in rois: 
+    mask_roi = cv2.imread(f"rois_{file_name}/serial={serial}/slice={slic}/id={id}_mask={nroi}.jpg", cv2.IMREAD_GRAYSCALE)
     imagen_final = cv2.add(imagen_final, mask_roi)
 
 # Guardar la imagen final
-cv2.imwrite(f"rois/id={id}_rois_final.jpg", imagen_final)
+cv2.imwrite(f"rois_{file_name}/serial={serial}/slice={slic}/id={id}_rois_final.jpg", imagen_final)
